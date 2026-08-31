@@ -1,14 +1,25 @@
 <script setup>
 import { onMounted } from 'vue'
-import { useProgramStore } from '../stores/program'
 import { useRouter } from 'vue-router'
-const router = useRouter()
+import { useProgramStore } from '../stores/program'
 
+// 1. Initialisation
+const router = useRouter()
+const store = useProgramStore()
+
+// 2. Fonctions d'action
 const startSession = () => {
   router.push('/run')
 }
-const store = useProgramStore()
 
+const logout = () => {
+  localStorage.removeItem('auth_token')
+  store.seasonData = null
+  store.currentProgress = null
+  router.push('/login')
+}
+
+// 3. Cycle de vie
 onMounted(() => {
   store.initApp()
 })
@@ -39,6 +50,11 @@ onMounted(() => {
         <button style="flex: 1; padding: 10px;">Reset Semaine</button>
         <button style="flex: 1; padding: 10px;">Reset Saison</button>
       </div>
+      <div style="margin-top: 40px; text-align: center;">
+  <button @click="logout" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 8px; cursor: pointer;">
+    Se déconnecter
+  </button>
+</div>
     </div>
   </main>
 </template>
