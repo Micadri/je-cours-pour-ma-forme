@@ -61,6 +61,16 @@ const pauseTimer = () => {
   if (wakeLock) wakeLock.release()
 }
 
+const prevStep = () => {
+  if (currentStepIndex.value > 0) {
+    const wasRunning = isRunning.value // On mémorise si le chrono tournait
+    pauseTimer()
+    currentStepIndex.value--
+    initStep()
+    if (wasRunning) startTimer() // On relance automatiquement si on était en pleine course
+  }
+}
+
 const nextStep = () => {
   pauseTimer()
   if (currentStepIndex.value < totalSteps.value - 1) {
@@ -96,6 +106,7 @@ onUnmounted(() => pauseTimer())
       <StepProgressBar :currentIndex="currentStepIndex" :totalSteps="totalSteps" />
       <TimerDisplay :timeRemaining="timeRemaining" :exerciseType="currentExercise.type" />
 
+      <!-- Bouton Démarrer / Pause -->
       <button 
         v-if="!isRunning" 
         @click="startTimer" 
@@ -111,6 +122,25 @@ onUnmounted(() => pauseTimer())
       >
         Pause
       </button>
+
+      <!-- NOUVEAU : Boutons de navigation manuelle -->
+      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <button 
+          @click="prevStep" 
+          :disabled="currentStepIndex === 0"
+          :style="{ opacity: currentStepIndex === 0 ? 0.5 : 1 }"
+          style="flex: 1; padding: 15px; background: #E0E0E0; color: #333; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;"
+        >
+          ⏪ Précédent
+        </button>
+        
+        <button 
+          @click="nextStep" 
+          style="flex: 1; padding: 15px; background: #E0E0E0; color: #333; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;"
+        >
+          Suivant ⏩
+        </button>
+      </div>
 
       <button @click="router.push('/')" style="padding: 15px; background: transparent; border: 1px solid #ccc; border-radius: 8px; width: 100%; cursor: pointer;">
         Quitter la session
