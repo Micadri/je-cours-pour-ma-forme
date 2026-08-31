@@ -9,6 +9,12 @@ if (!$email || !$password) {
     exit;
 }
 
+// Nouvelle sécurité : Validation stricte du format email
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(["status" => "error", "message" => "Format d'adresse email invalide"]);
+    exit;
+}
+
 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
 $stmt->execute([$email]);
 if ($stmt->fetch()) {

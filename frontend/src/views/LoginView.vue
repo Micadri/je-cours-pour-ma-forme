@@ -9,6 +9,13 @@ const isRegistering = ref(false)
 const router = useRouter()
 
 const handleSubmit = async () => {
+
+  // 1. Validation de l'email via Regex avant l'envoi
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.value)) {
+    error.value = "Veuillez entrer une adresse email valide complète (ex: nom@domaine.com)"
+    return
+  }
   const endpoint = isRegistering.value ? 'register.php' : 'login.php'
   try {
     const res = await fetch(`http://localhost:8888/je-cours-pour-ma-forme/api/auth/${endpoint}`, {
