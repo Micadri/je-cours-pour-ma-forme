@@ -10,20 +10,14 @@ if (!isset($data['session_id'], $data['next_session_id'])) {
 
 try {
     $pdo->beginTransaction();
-
-    // 1. Ajout de steps_count dans la requête SQL
-    $stmtLog = $pdo->prepare("INSERT INTO session_logs (user_id, session_id, status, distance_meters, steps_count) VALUES (?, ?, 'completed', ?, ?)");
-    
-    // 2. Récupération des nouvelles variables exactes envoyées par le front-end
+    $stmtLog = $pdo->prepare("INSERT INTO AD_session_logs (user_id, session_id, status, distance_meters, steps_count) VALUES (?, ?, 'completed', ?, ?)");
     $distance = $data['distance_meters'] ?? 0;
     $steps = $data['steps_count'] ?? 0;
-
-    // 3. Exécution avec les 4 paramètres
+    
     $stmtLog->execute([$user['id'], $data['session_id'], $distance, $steps]);
-
-    $stmtProgress = $pdo->prepare("UPDATE runner_progress SET current_session_id = ? WHERE user_id = ?");
+    $stmtProgress = $pdo->prepare("UPDATE AD_runner_progress SET current_session_id = ? WHERE user_id = ?");
     $stmtProgress->execute([$data['next_session_id'], $user['id']]);
-
+    
     $pdo->commit();
     echo json_encode(["status" => "success", "message" => "Course validée"]);
 } catch (Exception $e) {
