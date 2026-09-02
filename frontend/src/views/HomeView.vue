@@ -53,15 +53,23 @@ onMounted(() => { store.initApp() })
     <h1 style="text-align: center;">Vue d'ensemble</h1>
     
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-  <h2 style="margin: 0; font-size: 1.2rem; color: #333;">
-    Bonjour, {{ store.userProfile?.first_name || 'Coureur' }} !
-  </h2>
-  <button 
-    @click="handleLogout" 
-    style="padding: 8px 12px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 5px; cursor: pointer; font-size: 14px;"
-  >
-    Se déconnecter
-  </button>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <div style="width: 50px; height: 50px; border-radius: 50%; background: #ccc; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+      <img v-if="store.userProfile?.avatar" :src="store.userProfile.avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+      <span v-else style="color: white; font-size: 20px;">🏃</span>
+    </div>
+    <h2 style="margin: 0; font-size: 1.2rem; color: #333;">
+      Bonjour, {{ store.userProfile?.first_name || 'Coureur' }} !
+    </h2>
+  </div>
+  <div>
+    <button @click="router.push('/profile')" style="padding: 8px 12px; background: #e0e0e0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px;">
+      Profil
+    </button>
+    <button @click="handleLogout" style="padding: 8px 12px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 5px; cursor: pointer; font-size: 14px;">
+      Déconnexion
+    </button>
+  </div>
 </div>
 
     <div v-if="!store.seasonData || !store.currentProgress">

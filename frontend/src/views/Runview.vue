@@ -45,7 +45,7 @@ const startTimer = async () => {
   if (isRunning.value) return
   isRunning.value = true
   
-  if (!hasPlayedAudio.value && currentExercise.value.type) {
+if (!hasPlayedAudio.value && currentExercise.value.type && store.userProfile?.audio_enabled == 1) {
     playStepAudio(currentExercise.value.type)
     hasPlayedAudio.value = true
   }
@@ -104,11 +104,20 @@ onMounted(async () => {
   if (currentSession.value) initStep()
 })
 onUnmounted(() => pauseTimer())
+
+const quitSession = () => {
+  pauseTimer()
+  router.push('/')
+}
 </script>
 
 <template>
   <main style="padding: 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto; text-align: center;">
-    
+    <div style="text-align: left; margin-bottom: 20px;">
+  <button @click="quitSession" style="background: none; border: none; color: #f44336; font-size: 16px; font-weight: bold; cursor: pointer;">
+    ← Quitter la course
+  </button>
+</div>
     <!-- Pop-up de fin de session -->
     <div v-if="showEndPopup" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;">
       <div style="background: white; padding: 30px; border-radius: 12px; max-width: 320px; width: 90%; position: relative;">

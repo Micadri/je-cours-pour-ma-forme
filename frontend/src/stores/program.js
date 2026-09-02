@@ -141,7 +141,23 @@ export const useProgramStore = defineStore('program', () => {
       if (savedProfile) userProfile.value = JSON.parse(savedProfile)
     }
   }
+async function updateProfile(newProfileData) {
+    userProfile.value = { ...userProfile.value, ...newProfileData }
+    localStorage.setItem('pwa_profile', JSON.stringify(userProfile.value))
 
+    const token = localStorage.getItem('auth_token')
+    if (!token) return
+
+    try {
+      await fetch(`${API_BASE}/runner/update_profile.php?token=${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProfileData)
+      })
+    } catch (e) {
+      console.warn("Mise à jour du profil hors-ligne.")
+    }
+  }
   async function completeSession(distanceKm = 0, stepsCount = 0) {
     if (!seasonData.value || !currentProgress.value) return
 
@@ -236,5 +252,5 @@ export const useProgramStore = defineStore('program', () => {
     userProfile.value = null
   }
 
-  return { seasonData, currentProgress, currentSessionDetails, completedSessions, userProfile, initApp, completeSession, deleteSession, resetToWeek, resetSeason, logout }
+  return { seasonData, currentProgress, currentSessionDetails, completedSessions, userProfile, initApp, completeSession, deleteSession, resetToWeek, resetSeason, logout, updateProfile }
 })

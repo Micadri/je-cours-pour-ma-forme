@@ -19,7 +19,7 @@ try {
     $history = $stmtHistory->fetchAll();
 
     // 3. Récupération du profil
-    $stmtProfile = $pdo->prepare("SELECT first_name, theme, audio_enabled FROM users WHERE id = ?");
+  $stmtProfile = $pdo->prepare("SELECT first_name, theme, audio_enabled, avatar FROM users WHERE id = ?");
     $stmtProfile->execute([$user['id']]);
     $profile = $stmtProfile->fetch();
 
