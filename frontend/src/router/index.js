@@ -8,19 +8,20 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView, meta: { requiresAuth: true } },
     { path: '/run', name: 'run', component: RunView, meta: { requiresAuth: true } },
+    { path: '/profile', name: 'profile', component: () => import('../views/ProfileView.vue'), meta: { requiresAuth: true } },
+    { path: '/tips', name: 'tips', component: () => import('../views/TipsView.vue'), meta: { requiresAuth: true } },
+    { path: '/welcome', name: 'welcome', component: () => import('../views/OnboardingView.vue') },
     { path: '/login', name: 'login', component: LoginView },
-    { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
-    { path: '/profile', name: 'profile', component: () => import('../views/ProfileView.vue'), meta: { requiresAuth: true } }
+    { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') }
   ]
 })
 
-// Verrou de sécurité
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem('auth_token')
   
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
-  } else if (to.name === 'login' && isAuthenticated) {
+    next('/welcome') // Redirection vers l'onboarding
+  } else if ((to.name === 'login' || to.name === 'register' || to.name === 'welcome') && isAuthenticated) {
     next('/')
   } else {
     next()

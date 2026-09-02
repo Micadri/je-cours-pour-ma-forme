@@ -137,5 +137,19 @@ onMounted(() => { store.initApp() })
       <SessionHistory />
 
     </div>
+    <!-- Nouvelle section : La boîte à outils -->
+    <div style="margin-top: 30px; margin-bottom: 25px;">
+      <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px;">Préparation & Conseils</h3>
+      <div @click="router.push('/tips')" style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <div style="font-size: 24px;">💡</div>
+          <div>
+            <div style="font-weight: bold; color: #4CAF50;">La boîte à outils du coureur</div>
+            <div style="color: #666; font-size: 0.85rem; margin-top: 3px;">Échauffement, postures, hydratation...</div>
+          </div>
+        </div>
+        <div style="color: #aaa; font-weight: bold;">></div>
+      </div>
+    </div>
   </main>
 </template>
