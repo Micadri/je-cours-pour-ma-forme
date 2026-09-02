@@ -4,6 +4,11 @@ import { useRouter } from 'vue-router'
 import { useProgramStore } from '../stores/program'
 import SessionHistory from '../components/SessionHistory.vue'
 
+const handleLogout = () => {
+  store.logout()
+  router.push('/login')
+}
+
 const router = useRouter()
 const store = useProgramStore()
 
@@ -47,6 +52,15 @@ onMounted(() => { store.initApp() })
   <main style="padding: 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
     <h1 style="text-align: center;">Vue d'ensemble</h1>
     
+<div style="text-align: right; margin-bottom: 20px;">
+  <button 
+    @click="handleLogout" 
+    style="padding: 8px 12px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 5px; cursor: pointer; font-size: 14px;"
+  >
+    Se déconnecter
+  </button>
+</div>
+
     <div v-if="!store.seasonData || !store.currentProgress">
       <p style="text-align: center;">Synchronisation en cours...</p>
     </div>
