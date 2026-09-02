@@ -10,11 +10,7 @@ const store = useProgramStore()
 
 const isDataReady = computed(() => store.seasonData !== null && store.currentProgress !== null)
 
-const currentSession = computed(() => {
-  if (!isDataReady.value) return null
-  const week = store.seasonData.weeks.find(w => w.id === store.currentProgress.current_week_id)
-  return week ? week.sessions.find(s => s.id === store.currentProgress.current_session_id) : null
-})
+const currentSession = computed(() => store.currentSessionDetails?.session || null)
 
 const exercises = computed(() => currentSession.value?.exercises || [])
 const totalSteps = computed(() => exercises.value.length)
@@ -71,14 +67,15 @@ const prevStep = () => {
   }
 }
 
-const nextStep = () => {
+const nextStep = async () => {
   pauseTimer()
   if (currentStepIndex.value < totalSteps.value - 1) {
     currentStepIndex.value++
     initStep()
     startTimer()
   } else {
-    alert("Session terminée ! Bien joué.")
+    // Session terminée : sauvegarde en DB puis retour au tableau de bord
+    await store.completeSession(0) // On transmet 0 pour la distance provisoirement
     router.push('/')
   }
 }
