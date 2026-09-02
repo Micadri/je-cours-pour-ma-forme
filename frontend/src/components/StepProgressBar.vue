@@ -1,17 +1,19 @@
 <script setup>
 defineProps({
-  currentIndex: { type: Number, required: true },
-  totalSteps: { type: Number, required: true }
+  totalSteps: { type: Number, required: true },
+  currentStepIndex: { type: Number, required: true }
 })
 </script>
 
 <template>
-  <div>
-    <div style="background: #e0e0e0; height: 10px; border-radius: 5px; margin: 20px 0; overflow: hidden;">
+  <div style="margin-bottom: 20px;">
+    <div style="font-weight: bold; margin-bottom: 8px; color: #555;">
+      Étape {{ currentStepIndex + 1 }} sur {{ totalSteps }}
+    </div>
+    <div style="height: 10px; background: #ddd; border-radius: 5px; overflow: hidden;">
       <div 
-        :style="{ width: ((currentIndex + 1) / totalSteps * 100) + '%', background: '#4CAF50', height: '100%', transition: 'width 0.3s' }"
+        :style="{ width: `${((currentStepIndex + 1) / totalSteps) * 100}%`, height: '100%', background: '#4CAF50', transition: 'width 0.3s' }"
       ></div>
     </div>
-    <p style="font-weight: bold; text-align: center;">Étape {{ currentIndex + 1 }} sur {{ totalSteps }}</p>
   </div>
 </template>
