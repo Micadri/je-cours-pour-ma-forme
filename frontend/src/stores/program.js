@@ -30,17 +30,48 @@ export const useProgramStore = defineStore('program', () => {
   })
 
   async function initApp() {
-    // 1. Charger le vrai JSON statique
     try {
-      const res = await fetch('/program_5k.json') // Mise à jour ici
-      seasonData.value = await res.json()
+      const res = await fetch('/program_5k.json')
+      const rawData = await res.json()
+
+      const sourceProgram = Array.isArray(rawData) ? rawData[0] : rawData
+
+      const formattedData = {
+        title: sourceProgram.label || "Programme d'entraînement",
+        weeks: []
+      }
+
+      const weeksMap = {}
+      let sessionIdCounter = 1
+
+      sourceProgram.etapes.forEach(etape => {
+        const match = etape.label.match(/Semaine\s*(\d+)/i)
+        const weekId = match ? parseInt(match[1]) : 1
+
+        if (!weeksMap[weekId]) {
+          weeksMap[weekId] = { id: weekId, title: `Semaine ${weekId}`, sessions: [] }
+        }
+
+        const mappedExercises = etape.steps.map(step => ({
+          type: step.type,
+          duration_seconds: Math.round(step.time * 60)
+        }))
+
+        weeksMap[weekId].sessions.push({
+          id: sessionIdCounter++,
+          title: etape.label,
+          exercises: mappedExercises
+        })
+      })
+
+      formattedData.weeks = Object.values(weeksMap)
+      seasonData.value = formattedData
+
     } catch (e) {
       console.error("Erreur chargement JSON", e)
     }
 
-    // 2. Charger la progression depuis le LocalStorage...
     const savedProgress = localStorage.getItem('pwa_progress')
-    // (le reste du code reste identique)
     if (savedProgress) {
       currentProgress.value = JSON.parse(savedProgress)
     } else {
@@ -59,7 +90,6 @@ export const useProgramStore = defineStore('program', () => {
       nextSessionId = allSessions[currentIndex + 1].id
     }
 
-    // Sauvegarde en LocalStorage au lieu de la BDD
     currentProgress.value.current_session_id = nextSessionId
     localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
     await initApp()
@@ -72,10 +102,17 @@ export const useProgramStore = defineStore('program', () => {
   }
 
   const deleteSession = (id) => executeReset(id)
-  const resetWeek = () => {
-    if (currentSessionDetails.value) executeReset(currentSessionDetails.value.week.sessions[0].id)
+  
+  const resetToWeek = (weekId) => {
+    if (!seasonData.value) return
+    const targetWeek = seasonData.value.weeks.find(w => w.id === weekId)
+    if (targetWeek && targetWeek.sessions.length > 0) {
+      executeReset(targetWeek.sessions[0].id)
+    }
   }
+
   const resetSeason = () => executeReset(1)
 
-  return { seasonData, currentProgress, currentSessionDetails, completedSessions, initApp, completeSession, deleteSession, resetWeek, resetSeason }
+  // On s'assure que tout est bien exporté ici
+  return { seasonData, currentProgress, currentSessionDetails, completedSessions, initApp, completeSession, deleteSession, resetToWeek, resetSeason }
 })
