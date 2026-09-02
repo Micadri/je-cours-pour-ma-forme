@@ -10,7 +10,9 @@ export const useProgramStore = defineStore('program', () => {
 
   const currentSessionDetails = computed(() => {
     if (!seasonData.value || !currentProgress.value) return null
-    const targetId = currentProgress.value.current_session_id
+    // On force la conversion en nombre (PHP renvoie parfois du texte)
+    const targetId = Number(currentProgress.value.current_session_id)
+    
     for (const week of seasonData.value.weeks) {
       const session = week.sessions.find(s => s.id === targetId)
       if (session) return { week, session }
@@ -18,22 +20,23 @@ export const useProgramStore = defineStore('program', () => {
     return null
   })
 
-  const completedSessions = computed(() => {
+const completedSessions = computed(() => {
     if (!seasonData.value || !currentProgress.value) return []
-    const targetId = currentProgress.value.current_session_id
+    const targetId = Number(currentProgress.value.current_session_id)
     const completed = []
     
     for (const week of seasonData.value.weeks) {
       for (const session of week.sessions) {
         if (session.id < targetId) {
-          // On cherche les stats, avec les bons noms de colonnes
-          const stats = sessionHistory.value.find(h => h.session_id === session.id) || { distance_meters: 0, steps_count: 0 }
+          // On récupère TOUTES les stats de cette session et on isole la plus récente (la dernière)
+          const allStats = sessionHistory.value.filter(h => Number(h.session_id) === session.id)
+          const stats = allStats.length > 0 ? allStats[allStats.length - 1] : { distance_meters: 0, steps_count: 0 }
           
           completed.push({ 
             ...session, 
             weekTitle: week.title, 
-            distance: (stats.distance_meters / 1000).toFixed(2), // On reconvertit en km pour l'affichage Vue
-            steps: stats.steps_count 
+            distance: (Number(stats.distance_meters) / 1000).toFixed(2), 
+            steps: Number(stats.steps_count) 
           })
         }
       }
@@ -114,7 +117,6 @@ export const useProgramStore = defineStore('program', () => {
       
       if (progressJson.status === 'success') {
          currentProgress.value = progressJson.data.progress
-         // Si ton API renvoie l'historique de la DB, on le met à jour ici
          if (progressJson.data.history) {
              sessionHistory.value = progressJson.data.history
              localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
@@ -134,25 +136,23 @@ export const useProgramStore = defineStore('program', () => {
     }
   }
 
-  // On reçoit la distance en KM depuis la vue
   async function completeSession(distanceKm = 0, stepsCount = 0) {
     if (!seasonData.value || !currentProgress.value) return
 
-    // Conversion en mètres pour la DB
     const distanceMeters = Math.round(distanceKm * 1000)
+    const currentId = Number(currentProgress.value.current_session_id)
 
     const allSessions = seasonData.value.weeks.flatMap(w => w.sessions)
-    const currentIndex = allSessions.findIndex(s => s.id === currentProgress.value.current_session_id)
+    const currentIndex = allSessions.findIndex(s => s.id === currentId)
     
-    // Sauvegarde avec les noms de colonnes de la DB
     sessionHistory.value.push({ 
-      session_id: currentProgress.value.current_session_id, 
+      session_id: currentId, 
       distance_meters: distanceMeters, 
       steps_count: stepsCount 
     })
     localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
 
-    let nextSessionId = currentProgress.value.current_session_id
+    let nextSessionId = currentId
     if (currentIndex !== -1 && currentIndex + 1 < allSessions.length) {
       nextSessionId = allSessions[currentIndex + 1].id
     }
@@ -166,7 +166,7 @@ export const useProgramStore = defineStore('program', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          session_id: currentProgress.value.current_session_id, 
+          session_id: currentId, 
           next_session_id: nextSessionId, 
           distance_meters: distanceMeters, 
           steps_count: stepsCount 
@@ -175,7 +175,7 @@ export const useProgramStore = defineStore('program', () => {
     } catch (e) {
       addToSyncQueue({ 
         type: 'log', 
-        session_id: currentProgress.value.current_session_id, 
+        session_id: currentId, 
         distance_meters: distanceMeters, 
         steps_count: stepsCount 
       })
@@ -185,9 +185,12 @@ export const useProgramStore = defineStore('program', () => {
   }
 
   async function executeReset(targetSessionId) {
-    currentProgress.value.current_session_id = targetSessionId
+    const targetIdNum = Number(targetSessionId)
+    currentProgress.value.current_session_id = targetIdNum
     localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
-    sessionHistory.value = sessionHistory.value.filter(h => h.session_id < targetSessionId)
+    
+    // On nettoie aussi l'historique en forçant le format Number
+    sessionHistory.value = sessionHistory.value.filter(h => Number(h.session_id) < targetIdNum)
     localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
     
     const token = localStorage.getItem('auth_token')
@@ -195,10 +198,10 @@ export const useProgramStore = defineStore('program', () => {
       await fetch(`${API_BASE}/runner/reset.php?token=${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_session_id: targetSessionId })
+        body: JSON.stringify({ target_session_id: targetIdNum })
       })
     } catch (e) {
-      addToSyncQueue({ type: 'reset', target_session_id: targetSessionId })
+      addToSyncQueue({ type: 'reset', target_session_id: targetIdNum })
     }
 
     initApp()
@@ -215,19 +218,16 @@ export const useProgramStore = defineStore('program', () => {
   const resetSeason = () => executeReset(1)
 
   function logout() {
-    // Suppression des accès et de tous les caches hors-ligne
     localStorage.removeItem('auth_token')
     localStorage.removeItem('pwa_progress')
     localStorage.removeItem('pwa_history')
     localStorage.removeItem('pwa_cache_program')
     localStorage.removeItem('pwa_sync_queue')
     
-    // Réinitialisation de l'état
     seasonData.value = null
     currentProgress.value = null
     sessionHistory.value = []
   }
 
-  // N'oublie pas d'ajouter `logout` dans le return final :
   return { seasonData, currentProgress, currentSessionDetails, completedSessions, initApp, completeSession, deleteSession, resetToWeek, resetSeason, logout }
 })
