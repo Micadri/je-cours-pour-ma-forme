@@ -20,18 +20,20 @@ export default defineConfig({
         theme_color: '#4CAF50',
         background_color: '#ffffff',
         display: 'standalone',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
+    icons: [
+  {
+    src: '/logo-192-192.png',
+    sizes: '192x192',
+    type: 'image/png',
+    purpose: 'any maskable'
+  },
+  {
+    src: '/logo-550.png',
+    sizes: '550x550',
+    type: 'image/png',
+    purpose: 'any maskable'
+  }
+]
       }
     })
   ],
