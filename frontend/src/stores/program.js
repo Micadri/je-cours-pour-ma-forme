@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
-const API_BASE = 'https://cepegra-frontend.xyz/api'
+const API_BASE = '[https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api](https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api)'
 
 export const useProgramStore = defineStore('program', () => {
   const seasonData = ref(null)

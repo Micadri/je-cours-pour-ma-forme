@@ -10,7 +10,7 @@ const errorMessage = ref('')
 const handleLogin = async () => {
   errorMessage.value = ''
   try {
-    const res = await fetch('[https://cepegra-frontend.xyz/api/auth/login.php](https://cepegra-frontend.xyz/api/auth/login.php)', {
+    const res = await fetch('[https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api/auth/login.php](https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api/auth/login.php)', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email.value, password: password.value })
