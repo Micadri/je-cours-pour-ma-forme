@@ -11,7 +11,6 @@ const store = useProgramStore()
 const isDataReady = computed(() => store.seasonData !== null && store.currentProgress !== null)
 
 const currentSession = computed(() => store.currentSessionDetails?.session || null)
-
 const exercises = computed(() => currentSession.value?.exercises || [])
 const totalSteps = computed(() => exercises.value.length)
 
@@ -23,16 +22,32 @@ const currentExercise = computed(() => exercises.value[currentStepIndex.value] |
 let timerInterval = null
 let stepTargetTime = 0
 let wakeLock = null
+const hasPlayedAudio = ref(false) // Verrou pour l'audio
+
+// Fonction de lecture dynamique
+const playStepAudio = (type) => {
+  // Retrait des accents éventuels et passage en minuscules pour correspondre aux noms de fichiers
+  const fileName = type.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+  const audio = new Audio(`/audio/${fileName}.mp3`)
+  audio.play().catch(err => console.warn("Lecture audio bloquée par le navigateur :", err))
+}
 
 const initStep = () => {
   if (currentExercise.value.duration_seconds) {
     timeRemaining.value = currentExercise.value.duration_seconds
+    hasPlayedAudio.value = false // On libère le verrou pour la nouvelle étape
   }
 }
 
 const startTimer = async () => {
   if (isRunning.value) return
   isRunning.value = true
+  
+  // Lecture du son au démarrage de l'étape si ce n'est pas encore fait
+  if (!hasPlayedAudio.value && currentExercise.value.type) {
+    playStepAudio(currentExercise.value.type)
+    hasPlayedAudio.value = true
+  }
   
   try {
     if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen')
@@ -59,11 +74,11 @@ const pauseTimer = () => {
 
 const prevStep = () => {
   if (currentStepIndex.value > 0) {
-    const wasRunning = isRunning.value // On mémorise si le chrono tournait
+    const wasRunning = isRunning.value
     pauseTimer()
     currentStepIndex.value--
     initStep()
-    if (wasRunning) startTimer() // On relance automatiquement si on était en pleine course
+    if (wasRunning) startTimer()
   }
 }
 
@@ -74,8 +89,7 @@ const nextStep = async () => {
     initStep()
     startTimer()
   } else {
-    // Session terminée : sauvegarde en DB puis retour au tableau de bord
-    await store.completeSession(0) // On transmet 0 pour la distance provisoirement
+    await store.completeSession(0)
     router.push('/')
   }
 }
