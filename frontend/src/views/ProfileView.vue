@@ -57,6 +57,37 @@ const saveProfile = async () => {
   saveMessage.value = 'Profil mis à jour !'
   setTimeout(() => saveMessage.value = '', 3000)
 }
+const showFeedback = ref(false)
+const feedbackSubject = ref('bug')
+const feedbackMessage = ref('')
+const feedbackStatus = ref('')
+
+const sendFeedback = async () => {
+  const token = localStorage.getItem('auth_token')
+  if (!token) return
+
+  try {
+    const res = await fetch('http://localhost:8888/je-cours-pour-ma-forme/api/runner/feedback.php?token=' + token, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject: feedbackSubject.value, message: feedbackMessage.value })
+    })
+    const data = await res.json()
+    
+    if (data.status === 'success') {
+      feedbackStatus.value = "Message envoyé, merci !"
+      setTimeout(() => { 
+        showFeedback.value = false
+        feedbackStatus.value = ''
+        feedbackMessage.value = ''
+      }, 2000)
+    } else {
+      feedbackStatus.value = data.message
+    }
+  } catch (e) {
+    feedbackStatus.value = "Erreur réseau."
+  }
+}
 </script>
 
 <template>
@@ -105,7 +136,35 @@ const saveProfile = async () => {
       <button @click="saveProfile" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;">
         Sauvegarder mon profil
       </button>
-      
+      <!-- Bouton d'ouverture -->
+      <button @click="showFeedback = true" style="width: 100%; padding: 12px; margin-top: 15px; background: transparent; color: #666; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+        💡 Signaler un bug ou une idée
+      </button>
+
+      <!-- Modale de feedback -->
+      <div v-if="showFeedback" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;">
+        <div style="background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; position: relative;">
+          <button @click="showFeedback = false" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #888;">✕</button>
+          
+          <h2 style="margin-top: 0; color: #333;">Votre retour</h2>
+          
+          <select v-model="feedbackSubject" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px;">
+            <option value="bug">Signaler un bug 🐛</option>
+            <option value="idea">Proposer une idée 💡</option>
+            <option value="other">Autre message 💬</option>
+          </select>
+
+          <textarea v-model="feedbackMessage" rows="4" placeholder="Expliquez-nous tout..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 15px; box-sizing: border-box; resize: vertical;"></textarea>
+          
+          <button @click="sendFeedback" style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+            Envoyer
+          </button>
+          
+          <p v-if="feedbackStatus" style="text-align: center; color: #4CAF50; font-weight: bold; margin-bottom: 0;">
+            {{ feedbackStatus }}
+          </p>
+        </div>
+      </div>
       <p v-if="saveMessage" style="color: #4CAF50; text-align: center; margin-top: 15px; font-weight: bold;">
         {{ saveMessage }}
       </p>

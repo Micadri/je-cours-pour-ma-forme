@@ -109,6 +109,24 @@ const quitSession = () => {
   pauseTimer()
   router.push('/')
 }
+const shareSession = async () => {
+  const text = `Je viens de terminer "${currentSession.value.title}" en parcourant ${finalStats.value.distance} km ! 🏃💨 Rejoins-moi sur Je Cours Pour Ma Forme !`
+  
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Exploit sportif !',
+        text: text,
+      })
+    } catch (err) {
+      console.log('Partage annulé')
+    }
+  } else {
+    // Fallback pour les vieux navigateurs ou PC de bureau
+    navigator.clipboard.writeText(text)
+    alert('Texte copié dans le presse-papier !')
+  }
+}
 </script>
 
 <template>
@@ -118,18 +136,24 @@ const quitSession = () => {
     ← Quitter la course
   </button>
 </div>
+
     <!-- Pop-up de fin de session -->
     <div v-if="showEndPopup" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000;">
       <div style="background: white; padding: 30px; border-radius: 12px; max-width: 320px; width: 90%; position: relative;">
         <button @click="closeAndSave" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #888;">✖</button>
         <h2 style="margin-top: 0; color: #4CAF50;">Session terminée ! 🎉</h2>
-        <div style="margin: 20px 0; font-size: 1.2rem; color: #333;">
-          <p><strong>Distance :</strong> {{ finalStats.distance }} km</p>
-          <p><strong>Pas :</strong> {{ finalStats.steps }}</p>
-        </div>
-        <button @click="closeAndSave" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">
-          Valider et Quitter
-        </button>
+      <div style="margin: 20px 0; font-size: 1.2rem; color: #333;">
+           <p><strong>Distance :</strong> {{ finalStats.distance }} km</p>
+           <p><strong>Pas :</strong> {{ finalStats.steps }}</p>
+         </div>
+
+         <button @click="shareSession" style="width: 100%; padding: 15px; background: #1DA1F2; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px;">
+           🚀 Partager mon exploit
+         </button>
+
+         <button @click="closeAndSave" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">
+           Valider et Quitter
+         </button>
       </div>
     </div>
 
