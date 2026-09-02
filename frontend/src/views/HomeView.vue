@@ -52,7 +52,10 @@ onMounted(() => { store.initApp() })
   <main style="padding: 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
     <h1 style="text-align: center;">Vue d'ensemble</h1>
     
-<div style="text-align: right; margin-bottom: 20px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <h2 style="margin: 0; font-size: 1.2rem; color: #333;">
+    Bonjour, {{ store.userProfile?.first_name || 'Coureur' }} !
+  </h2>
   <button 
     @click="handleLogout" 
     style="padding: 8px 12px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 5px; cursor: pointer; font-size: 14px;"

@@ -4,6 +4,7 @@ require __DIR__ . '/../config.php';
 $data = json_decode(file_get_contents("php://input"), true);
 $email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
+$first_name = trim($data['first_name'] ?? '');
 $ip = $_SERVER['REMOTE_ADDR'];
 
 // Sécurité : 3 tentatives par heure maximum
@@ -34,8 +35,8 @@ function logAttemptAndExit($pdo, $ip, $message) {
     exit;
 }
 
-if (!$email || !$password) {
-    logAttemptAndExit($pdo, $ip, "Email et mot de passe requis");
+if (!$email || !$password || !$first_name) {
+    logAttemptAndExit($pdo, $ip, "Prénom, email et mot de passe requis");
 }
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -52,8 +53,8 @@ $hash = password_hash($password, PASSWORD_BCRYPT);
 $token = bin2hex(random_bytes(32));
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO users (email, password_hash, api_token, role) VALUES (?, ?, ?, 'runner')");
-    $stmt->execute([$email, $hash, $token]);
+    $stmt = $pdo->prepare("INSERT INTO users (email, first_name, password_hash, api_token, role) VALUES (?, ?, ?, ?, 'runner')");
+    $stmt->execute([$email, $first_name, $hash, $token]);
     
     // Succès : on supprime l'historique d'échecs éventuel pour cette IP
     $pdo->prepare("DELETE FROM register_attempts WHERE ip_address = ?")->execute([$ip]);

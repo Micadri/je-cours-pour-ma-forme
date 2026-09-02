@@ -7,10 +7,10 @@ export const useProgramStore = defineStore('program', () => {
   const seasonData = ref(null)
   const currentProgress = ref(null)
   const sessionHistory = ref([])
+  const userProfile = ref(null)
 
   const currentSessionDetails = computed(() => {
     if (!seasonData.value || !currentProgress.value) return null
-    // On force la conversion en nombre (PHP renvoie parfois du texte)
     const targetId = Number(currentProgress.value.current_session_id)
     
     for (const week of seasonData.value.weeks) {
@@ -20,7 +20,7 @@ export const useProgramStore = defineStore('program', () => {
     return null
   })
 
-const completedSessions = computed(() => {
+  const completedSessions = computed(() => {
     if (!seasonData.value || !currentProgress.value) return []
     const targetId = Number(currentProgress.value.current_session_id)
     const completed = []
@@ -28,7 +28,6 @@ const completedSessions = computed(() => {
     for (const week of seasonData.value.weeks) {
       for (const session of week.sessions) {
         if (session.id < targetId) {
-          // On récupère TOUTES les stats de cette session et on isole la plus récente (la dernière)
           const allStats = sessionHistory.value.filter(h => Number(h.session_id) === session.id)
           const stats = allStats.length > 0 ? allStats[allStats.length - 1] : { distance_meters: 0, steps_count: 0 }
           
@@ -121,6 +120,10 @@ const completedSessions = computed(() => {
              sessionHistory.value = progressJson.data.history
              localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
          }
+         if (progressJson.data.profile) {
+             userProfile.value = progressJson.data.profile
+             localStorage.setItem('pwa_profile', JSON.stringify(userProfile.value))
+         }
       }
 
     } catch (e) {
@@ -133,6 +136,9 @@ const completedSessions = computed(() => {
 
       const savedHistory = localStorage.getItem('pwa_history')
       sessionHistory.value = savedHistory ? JSON.parse(savedHistory) : []
+
+      const savedProfile = localStorage.getItem('pwa_profile')
+      if (savedProfile) userProfile.value = JSON.parse(savedProfile)
     }
   }
 
@@ -189,7 +195,6 @@ const completedSessions = computed(() => {
     currentProgress.value.current_session_id = targetIdNum
     localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
     
-    // On nettoie aussi l'historique en forçant le format Number
     sessionHistory.value = sessionHistory.value.filter(h => Number(h.session_id) < targetIdNum)
     localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
     
@@ -223,11 +228,13 @@ const completedSessions = computed(() => {
     localStorage.removeItem('pwa_history')
     localStorage.removeItem('pwa_cache_program')
     localStorage.removeItem('pwa_sync_queue')
+    localStorage.removeItem('pwa_profile')
     
     seasonData.value = null
     currentProgress.value = null
     sessionHistory.value = []
+    userProfile.value = null
   }
 
-  return { seasonData, currentProgress, currentSessionDetails, completedSessions, initApp, completeSession, deleteSession, resetToWeek, resetSeason, logout }
+  return { seasonData, currentProgress, currentSessionDetails, completedSessions, userProfile, initApp, completeSession, deleteSession, resetToWeek, resetSeason, logout }
 })

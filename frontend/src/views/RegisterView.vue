@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+const firstName = ref('')
 const router = useRouter()
 const email = ref('')
 const password = ref('')
@@ -13,7 +14,7 @@ const handleRegister = async () => {
     const res = await fetch('http://localhost:8888/je-cours-pour-ma-forme/api/auth/register.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value, password: password.value })
+      body: JSON.stringify({ email: email.value, password: password.value, first_name: firstName.value })
     })
     
     const data = await res.json()
@@ -39,7 +40,11 @@ const handleRegister = async () => {
       <p v-if="errorMessage" style="color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; font-size: 14px;">
         {{ errorMessage }}
       </p>
-
+<!-- Dans ton template, juste avant le champ Email -->
+<div>
+  <label style="display: block; margin-bottom: 5px; color: #555; font-weight: bold;">Prénom</label>
+  <input type="text" v-model="firstName" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;" />
+</div>
       <form @submit.prevent="handleRegister" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
         <div>
           <label style="display: block; margin-bottom: 5px; color: #555; font-weight: bold;">Email</label>

@@ -18,12 +18,18 @@ try {
     $stmtHistory->execute([$user['id']]);
     $history = $stmtHistory->fetchAll();
 
-    // 3. Envoi au format exact attendu par le Store
+    // 3. Récupération du profil
+    $stmtProfile = $pdo->prepare("SELECT first_name, theme, audio_enabled FROM users WHERE id = ?");
+    $stmtProfile->execute([$user['id']]);
+    $profile = $stmtProfile->fetch();
+
+    // 4. Envoi au format exact attendu par le Store
     echo json_encode([
         "status" => "success", 
         "data" => [
             "progress" => $progress,
-            "history" => $history
+            "history" => $history,
+            "profile" => $profile
         ]
     ]);
 } catch (Exception $e) {
