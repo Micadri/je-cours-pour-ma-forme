@@ -11,7 +11,7 @@ const errorMessage = ref('')
 const handleRegister = async () => {
   errorMessage.value = ''
   try {
-    const res = await fetch('[https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api/auth/register.php](https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api/auth/register.php)', {
+    const res = await fetch('https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api/auth/register.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email.value, password: password.value, first_name: firstName.value })
