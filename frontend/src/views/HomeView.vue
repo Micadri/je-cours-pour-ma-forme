@@ -22,13 +22,6 @@ const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
 
 const startSession = () => router.push('/run')
 
-const logout = () => {
-  localStorage.removeItem('auth_token')
-  store.seasonData = null
-  store.currentProgress = null
-  router.push('/login')
-}
-
 onMounted(() => {
   store.initApp()
 })
@@ -106,15 +99,6 @@ onMounted(() => {
             Suivant
           </button>
         </div>
-      </div>
-
-      <div style="margin-top: 50px; text-align: center;">
-        <button 
-          @click="logout" 
-          style="padding: 10px 20px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer;"
-        >
-          Se déconnecter
-        </button>
       </div>
     </div>
   </main>

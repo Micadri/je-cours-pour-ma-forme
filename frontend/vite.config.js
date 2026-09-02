@@ -9,10 +9,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      workbox: {
-        // Force la mise en cache des audios pour courir sans réseau
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}'] 
-      },
+     workbox: {
+  // Ajout de 'json' à la liste des fichiers à stocker hors-ligne
+  globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3,json}'] 
+},
       manifest: {
         name: 'Je Cours Pour Ma Forme',
         short_name: 'JCPMF',
@@ -28,8 +28,8 @@ export default defineConfig({
     purpose: 'any maskable'
   },
   {
-    src: '/logo-550.png',
-    sizes: '550x550',
+    src: '/logo-512.png',
+    sizes: '512x512',
     type: 'image/png',
     purpose: 'any maskable'
   }

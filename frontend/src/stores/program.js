@@ -30,16 +30,17 @@ export const useProgramStore = defineStore('program', () => {
   })
 
   async function initApp() {
-    // 1. Charger le JSON statique
+    // 1. Charger le vrai JSON statique
     try {
-      const res = await fetch('/program.json')
+      const res = await fetch('/program_5k.json') // Mise à jour ici
       seasonData.value = await res.json()
     } catch (e) {
       console.error("Erreur chargement JSON", e)
     }
 
-    // 2. Charger la progression depuis le LocalStorage (ou initialiser à 1)
+    // 2. Charger la progression depuis le LocalStorage...
     const savedProgress = localStorage.getItem('pwa_progress')
+    // (le reste du code reste identique)
     if (savedProgress) {
       currentProgress.value = JSON.parse(savedProgress)
     } else {
