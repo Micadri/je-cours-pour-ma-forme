@@ -11,7 +11,7 @@ const errorMessage = ref('')
 const handleRegister = async () => {
   errorMessage.value = ''
   try {
-    const res = await fetch('http://localhost:8888/je-cours-pour-ma-forme/api/auth/register.php', {
+    const res = await fetch('[https://cepegra-frontend.xyz/api/auth/register.php](https://cepegra-frontend.xyz/api/auth/register.php)', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email.value, password: password.value, first_name: firstName.value })

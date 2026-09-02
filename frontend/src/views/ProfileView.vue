@@ -67,7 +67,7 @@ const sendFeedback = async () => {
   if (!token) return
 
   try {
-    const res = await fetch('http://localhost:8888/je-cours-pour-ma-forme/api/runner/feedback.php?token=' + token, {
+    const res = await fetch('[https://cepegra-frontend.xyz/api/runner/feedback.php?token=](https://cepegra-frontend.xyz/api/runner/feedback.php?token=)' + token, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subject: feedbackSubject.value, message: feedbackMessage.value })
