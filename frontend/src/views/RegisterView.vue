@@ -19,7 +19,9 @@ const handleRegister = async () => {
     const data = await res.json()
     
     if (data.status === 'success') {
-      router.push('/login')
+      // Sauvegarde du token et redirection immédiate vers le tableau de bord
+      localStorage.setItem('auth_token', data.token)
+      router.push('/')
     } else {
       errorMessage.value = data.message || 'Erreur lors de l\'inscription'
     }
