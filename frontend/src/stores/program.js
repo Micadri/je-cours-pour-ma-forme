@@ -30,24 +30,25 @@ export const useProgramStore = defineStore('program', () => {
   })
 
   async function initApp() {
-    const token = localStorage.getItem('auth_token')
-    if (!token) return
+    // 1. Charger le JSON statique
     try {
-      const progRes = await fetch(`http://localhost:8888/je-cours-pour-ma-forme/api/program/full.php?token=${token}`)
-      const progJson = await progRes.json()
-      if (progJson.status === 'success') seasonData.value = progJson.data
+      const res = await fetch('/program.json')
+      seasonData.value = await res.json()
+    } catch (e) {
+      console.error("Erreur chargement JSON", e)
+    }
 
-      const progressRes = await fetch(`http://localhost:8888/je-cours-pour-ma-forme/api/runner/progress.php?token=${token}`)
-      const progressJson = await progressRes.json()
-      if (progressJson.status === 'success') currentProgress.value = progressJson.data
-    } catch (error) {
-      console.error("Erreur de synchronisation", error)
+    // 2. Charger la progression depuis le LocalStorage (ou initialiser à 1)
+    const savedProgress = localStorage.getItem('pwa_progress')
+    if (savedProgress) {
+      currentProgress.value = JSON.parse(savedProgress)
+    } else {
+      currentProgress.value = { current_week_id: 1, current_session_id: 1 }
     }
   }
 
-  async function completeSession(distance = 0) {
-    const token = localStorage.getItem('auth_token')
-    if (!token || !seasonData.value || !currentProgress.value) return
+  async function completeSession() {
+    if (!seasonData.value || !currentProgress.value) return
 
     const allSessions = seasonData.value.weeks.flatMap(w => w.sessions)
     const currentIndex = allSessions.findIndex(s => s.id === currentProgress.value.current_session_id)
@@ -57,42 +58,22 @@ export const useProgramStore = defineStore('program', () => {
       nextSessionId = allSessions[currentIndex + 1].id
     }
 
-    try {
-      const res = await fetch(`http://localhost:8888/je-cours-pour-ma-forme/api/runner/log.php?token=${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: currentProgress.value.current_session_id, next_session_id: nextSessionId, distance: distance })
-      })
-      const data = await res.json()
-      if (data.status === 'success') await initApp()
-    } catch (error) {
-      console.error("Erreur", error)
-    }
+    // Sauvegarde en LocalStorage au lieu de la BDD
+    currentProgress.value.current_session_id = nextSessionId
+    localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
+    await initApp()
   }
 
-  // Suppression des messages d'alerte dans l'exécution
-  async function executeReset(targetSessionId) {
-    const token = localStorage.getItem('auth_token')
-    try {
-      const res = await fetch(`http://localhost:8888/je-cours-pour-ma-forme/api/runner/reset.php?token=${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_session_id: targetSessionId })
-      })
-      const data = await res.json()
-      if (data.status === 'success') await initApp()
-    } catch (error) {
-      console.error("Erreur de reset", error)
-    }
+  function executeReset(targetSessionId) {
+    currentProgress.value.current_session_id = targetSessionId
+    localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
+    initApp()
   }
 
   const deleteSession = (id) => executeReset(id)
-  
   const resetWeek = () => {
-    if (!currentSessionDetails.value) return
-    executeReset(currentSessionDetails.value.week.sessions[0].id)
+    if (currentSessionDetails.value) executeReset(currentSessionDetails.value.week.sessions[0].id)
   }
-  
   const resetSeason = () => executeReset(1)
 
   return { seasonData, currentProgress, currentSessionDetails, completedSessions, initApp, completeSession, deleteSession, resetWeek, resetSeason }

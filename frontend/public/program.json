@@ -1,0 +1,29 @@
+{
+  "title": "Objectif 5 km",
+  "weeks": [
+    {
+      "id": 1,
+      "title": "Semaine 1",
+      "sessions": [
+        {
+          "id": 1,
+          "title": "Session 1",
+          "exercises": [
+            { "type": "echauffement", "duration_seconds": 300 },
+            { "type": "trottes", "duration_seconds": 60 },
+            { "type": "marches", "duration_seconds": 60 }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Session 2",
+          "exercises": [
+            { "type": "echauffement", "duration_seconds": 300 },
+            { "type": "trottes", "duration_seconds": 120 },
+            { "type": "marches", "duration_seconds": 120 }
+          ]
+        }
+      ]
+    }
+  ]
+}
