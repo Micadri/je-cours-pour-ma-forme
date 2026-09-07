@@ -33,59 +33,81 @@ body { transition: background 0.3s, color 0.3s; margin: 0; background-color: #f9
 /* --- MODE SOMBRE : Fond adouci (Gris Anthracite) --- */
 body.dark-mode {
   background-color: #1e1e24 !important; 
-  color: #e0e0e0 !important;
 }
 
-/* 1. Assombrir les encadrés (Correction du texte blanc sur fond blanc) */
-/* On inclut les formats 'rgb' car le navigateur modifie parfois tes styles en direct */
+/* 1. TOUTES LES CARTES (Profil, Progression, Outils, Sessions) */
+/* On inclut les traductions "rgb" de Vue.js pour forcer l'application du style */
 body.dark-mode div[style*="background: #fff"],
 body.dark-mode div[style*="background: white"],
 body.dark-mode div[style*="background: #ffffff"],
 body.dark-mode div[style*="background: #f4f4f4"],
-body.dark-mode div[style*="background: #fafafa"],
 body.dark-mode div[style*="background-color: rgb(255, 255, 255)"],
+body.dark-mode div[style*="background: rgb(255, 255, 255)"],
 body.dark-mode div[style*="background-color: rgb(244, 244, 244)"],
+body.dark-mode div[style*="background: rgb(244, 244, 244)"],
 body.dark-mode li {
-  background-color: #2b2d35 !important; /* Gris "carte" légèrement plus clair */
+  background-color: #2b2d35 !important;
   border: 1px solid #3e4149 !important;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
 }
 
-/* 2. Textes lisibles partout */
-body.dark-mode p, body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, 
-body.dark-mode label, body.dark-mode span, body.dark-mode strong, body.dark-mode div {
+/* 2. L'INTÉRIEUR DE LA SESSION DÉPLIÉE (Un chouia plus clair pour la profondeur) */
+body.dark-mode div[style*="background: #fafafa"],
+body.dark-mode div[style*="background-color: rgb(250, 250, 250)"],
+body.dark-mode div[style*="background: rgb(250, 250, 250)"] {
+  background-color: #353842 !important; 
+  border-top: 1px solid #4a4d59 !important;
+}
+
+/* 3. FORCER LES TEXTES À ÊTRE LISIBLES PARTOUT */
+body.dark-mode,
+body.dark-mode p, 
+body.dark-mode h1, 
+body.dark-mode h2, 
+body.dark-mode h3, 
+body.dark-mode label, 
+body.dark-mode span, 
+body.dark-mode strong, 
+body.dark-mode div {
   color: #e0e0e0 !important;
 }
 
-/* 3. Sauver les textes verts (pour ne pas qu'ils deviennent blancs) */
+/* 4. SAUVER LES COULEURS SPÉCIFIQUES (Vert et Rouge) */
 body.dark-mode [style*="color: #4CAF50"] {
-  color: #66bb6a !important; /* Un vert un peu plus clair, adapté au sombre */
+  color: #66bb6a !important; 
+}
+body.dark-mode [style*="color: #f44336"],
+body.dark-mode [style*="color: #ff5252"] {
+  color: #ff8a80 !important;
 }
 
-/* 4. Le logo : fond gris clair, bords arrondis, moins éblouissant */
+/* 5. BOUTONS SECONDAIRES (Reset Semaine / Saison) */
+body.dark-mode button[style*="background: #e0e0e0"],
+body.dark-mode button[style*="background: rgb(224, 224, 224)"],
+body.dark-mode button[style*="background-color: rgb(224, 224, 224)"] {
+  background-color: #3e4149 !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #555 !important;
+}
+
+body.dark-mode button[style*="background: #ffebee"],
+body.dark-mode button[style*="background: rgb(255, 235, 238)"],
+body.dark-mode button[style*="background-color: rgb(255, 235, 238)"] {
+  background-color: #4a2323 !important;
+  color: #ff8a80 !important;
+  border: 1px solid #ff8a80 !important;
+}
+
+/* 6. LOGO & FORMULAIRES */
 body.dark-mode header img {
   background-color: #d1d1d1 !important;
   padding: 10px !important;
   border-radius: 20px !important;
   opacity: 0.9;
 }
-
-/* 5. Formulaires */
 body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
   background-color: #1e1e24 !important;
   color: #ffffff !important;
   border: 1px solid #555 !important;
-}
-
-/* 6. Boutons secondaires */
-body.dark-mode button[style*="background: #e0e0e0"],
-body.dark-mode button[style*="background: #f0f0f0"] {
-  background-color: #3e4149 !important;
-  color: #fff !important;
-}
-body.dark-mode button[style*="background: #ffebee"] {
-  background-color: #4a2323 !important;
-  color: #ff8a80 !important;
-  border-color: #ff8a80 !important;
 }
 </style>
