@@ -44,9 +44,11 @@ export const useProgramStore = defineStore('program', () => {
   })
 
   // --- MOTEUR DE SYNCHRONISATION ---
+// --- MOTEUR DE SYNCHRONISATION ---
   async function syncQueue() {
     const token = localStorage.getItem('auth_token')
     if (!token) return
+    
     const queue = JSON.parse(localStorage.getItem('pwa_sync_queue') || '[]')
     if (queue.length === 0) return
 
@@ -57,10 +59,11 @@ export const useProgramStore = defineStore('program', () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              session_id: action.session_id, 
-              distance_meters: action.distance_meters, 
-              steps_count: action.steps_count 
-            })
+               session_id: action.session_id,
+               next_session_id: action.next_session_id, // Variable cruciale ajoutée
+               distance_meters: action.distance_meters,
+               steps_count: action.steps_count 
+             })
           })
         } else if (action.type === 'reset') {
           await fetch(`${API_BASE}/runner/reset.php?token=${token}`, {
@@ -71,9 +74,9 @@ export const useProgramStore = defineStore('program', () => {
         }
       }
       localStorage.removeItem('pwa_sync_queue')
-      console.log("Synchronisation hors-ligne réussie !")
+      console.log("Transfert des données invité terminé avec succès !")
     } catch (e) {
-      console.warn("Toujours hors-ligne, la synchronisation attendra.")
+      console.warn("La synchronisation attendra.")
     }
   }
 
@@ -161,12 +164,12 @@ async function updateProfile(newProfileData) {
 
     const allSessions = seasonData.value.weeks.flatMap(w => w.sessions)
     const currentIndex = allSessions.findIndex(s => s.id === currentId)
-    
+
     sessionHistory.value.push({ 
-      session_id: currentId, 
-      distance_meters: distanceMeters, 
-      steps_count: stepsCount 
-    })
+       session_id: currentId, 
+       distance_meters: distanceMeters, 
+       steps_count: stepsCount 
+     })
     localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
 
     let nextSessionId = currentId
@@ -178,30 +181,33 @@ async function updateProfile(newProfileData) {
     localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
 
     const token = localStorage.getItem('auth_token')
-    try {
-      await fetch(`${API_BASE}/runner/log.php?token=${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          session_id: currentId, 
-          next_session_id: nextSessionId, 
-          distance_meters: distanceMeters, 
-          steps_count: stepsCount 
+
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/runner/log.php?token=${token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+             session_id: currentId, 
+             next_session_id: nextSessionId, 
+             distance_meters: distanceMeters, 
+             steps_count: stepsCount 
+           })
         })
-      })
-    } catch (e) {
-      addToSyncQueue({ 
-        type: 'log', 
-        session_id: currentId, 
-        distance_meters: distanceMeters, 
-        steps_count: stepsCount 
-      })
+        const data = await res.json()
+        if (data.status !== 'success') throw new Error("Erreur API")
+      } catch (e) {
+        addToSyncQueue({ type: 'log', session_id: currentId, next_session_id: nextSessionId, distance_meters: distanceMeters, steps_count: stepsCount })
+      }
+    } else {
+      // Mode Invité : on force la mise en file d'attente silencieuse
+      addToSyncQueue({ type: 'log', session_id: currentId, next_session_id: nextSessionId, distance_meters: distanceMeters, steps_count: stepsCount })
     }
 
     await initApp()
   }
 
-  async function executeReset(targetSessionId) {
+ async function executeReset(targetSessionId) {
     const targetIdNum = Number(targetSessionId)
     currentProgress.value.current_session_id = targetIdNum
     localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
@@ -210,13 +216,20 @@ async function updateProfile(newProfileData) {
     localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
     
     const token = localStorage.getItem('auth_token')
-    try {
-      await fetch(`${API_BASE}/runner/reset.php?token=${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_session_id: targetIdNum })
-      })
-    } catch (e) {
+
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/runner/reset.php?token=${token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_session_id: targetIdNum })
+        })
+        const data = await res.json()
+        if (data.status !== 'success') throw new Error("Erreur API")
+      } catch (e) {
+        addToSyncQueue({ type: 'reset', target_session_id: targetIdNum })
+      }
+    } else {
       addToSyncQueue({ type: 'reset', target_session_id: targetIdNum })
     }
 
