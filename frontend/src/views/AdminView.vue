@@ -228,7 +228,10 @@ onMounted(() => { fetchRunners() })
           </thead>
           <tbody>
             <tr v-for="(log, i) in filteredHistory" :key="i" style="border-bottom: 1px solid #eee;">
-              <td style="padding: 10px; color: #666;">{{ new Date(log.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' }) }}</td>
+              <td style="padding: 10px; color: #666;">
+                <!-- Gestion robuste de l'affichage de la date -->
+                {{ log.created_at ? new Date(log.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' }) : 'Date inconnue' }}
+              </td>
               <td style="padding: 10px; font-weight: bold; color: #333;">{{ log.season_title }}</td>
               <td style="padding: 10px; color: #555;">{{ log.week_title }}</td>
               <td style="padding: 10px; color: #e38734;">{{ log.session_title.split(' - ')[1] || log.session_title }}</td>
