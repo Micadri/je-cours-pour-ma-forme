@@ -28,7 +28,20 @@ watch(() => store.userProfile?.theme, updateTheme)
 
 <style>
 /* Style global de base */
-body { transition: background 0.3s, color 0.3s; margin: 0; background-color: #f9f9f9; }
+/* Style global de base */
+html {
+  /* Active le défilement magnétique en douceur sur toute la page */
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+
+body {
+  transition: background 0.3s, color 0.3s;
+  margin: 0;
+  background-color: #f9f9f9;
+  /* Assure que la hauteur s'adapte bien aux écrans de téléphone */
+  min-height: 100vh; 
+}
 
 /* --- MODE SOMBRE : Fond adouci (Gris Anthracite) --- */
 body.dark-mode {
