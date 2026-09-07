@@ -22,6 +22,13 @@ const selectedRunner = ref(null)
 const runnerHistory = ref([])
 const isHistoryLoading = ref(false)
 
+// États pour le Générateur de Programme
+const newSeasonTitle = ref('Saison 2 - Objectif 10 km')
+const newSeasonWeeks = ref(12)
+const newSeasonSessions = ref(3)
+const isGenerating = ref(false)
+const generateMessage = ref('')
+
 // Filtres
 const filterSeason = ref('')
 const filterWeek = ref('')
@@ -32,7 +39,7 @@ const handleLogout = () => {
   router.push('/welcome')
 }
 
-// Fonction de formatage robuste pour les dates SQL
+// Formatage de la date
 const formatDate = (dateString) => {
   if (!dateString) return 'Date inconnue'
   const safeDate = dateString.replace(' ', 'T')
@@ -62,7 +69,6 @@ const fetchRunners = async () => {
   }
 }
 
-// Charger les feedbacks
 const fetchFeedbacks = async () => {
   isFeedbacksLoading.value = true
   const token = localStorage.getItem('auth_token')
@@ -81,10 +87,8 @@ const fetchFeedbacks = async () => {
   }
 }
 
-// Supprimer un feedback
 const deleteFeedback = async (id) => {
   if (!confirm("Voulez-vous vraiment supprimer ce signalement ?")) return
-
   const token = localStorage.getItem('auth_token')
   try {
     const res = await fetch(`${API_BASE}/admin/users.php?action=delete_feedback&id=${id}`, {
@@ -92,7 +96,6 @@ const deleteFeedback = async (id) => {
     })
     const data = await res.json()
     if (data.status === 'success') {
-      // Retire visuellement le feedback sans recharger toute la page
       feedbacks.value = feedbacks.value.filter(fb => fb.id !== id)
     } else {
       alert("Erreur lors de la suppression.")
@@ -168,6 +171,41 @@ const exportData = async (format) => {
     window.URL.revokeObjectURL(url)
   } catch (e) {
     alert("Erreur lors du téléchargement.")
+  }
+}
+
+// Fonction de génération du programme procédural
+const generateProgram = async () => {
+  if (!confirm(`Générer ${newSeasonWeeks.value * newSeasonSessions.value} entraînements procéduraux ?`)) return
+  isGenerating.value = true
+  generateMessage.value = ''
+  
+  const token = localStorage.getItem('auth_token')
+  try {
+    const res = await fetch(`${API_BASE}/admin/users.php?action=generate_season`, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({
+        title: newSeasonTitle.value,
+        weeks: newSeasonWeeks.value,
+        sessionsPerWeek: newSeasonSessions.value
+      })
+    })
+    const data = await res.json()
+    if (data.status === 'success') {
+      generateMessage.value = "✅ Programme généré avec succès en base de données !"
+      // Force le store à se resynchroniser pour télécharger le nouveau programme
+      await store.initApp()
+    } else {
+      generateMessage.value = "❌ Erreur : " + data.message
+    }
+  } catch (e) {
+    generateMessage.value = "❌ Erreur réseau lors de la génération."
+  } finally {
+    isGenerating.value = false
   }
 }
 
@@ -273,7 +311,6 @@ onMounted(() => {
               </div>
             </div>
             
-            <!-- Zone Date + Bouton de suppression -->
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
               <div style="font-size: 0.8rem; color: #aaa; text-align: right;">
                 {{ formatDate(fb.created_at) }}
@@ -287,6 +324,43 @@ onMounted(() => {
             {{ fb.message }}
           </p>
         </div>
+      </div>
+    </div>
+
+    <!-- TAB : PROGRAMME CRUD -->
+    <div v-if="activeTab === 'program'">
+      <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        
+        <div style="text-align: center; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 25px;">
+          <h2 style="color: #4CAF50; margin-top: 0; margin-bottom: 10px;">Générateur de Programme</h2>
+          <p style="color: #666; font-size: 0.95rem; margin: 0;">Générez automatiquement une nouvelle saison crescendo (Échauffement + Course/Marche + Étirements).</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: 0 auto;">
+          <div>
+            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Titre de la nouvelle saison</label>
+            <input type="text" v-model="newSeasonTitle" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;" />
+          </div>
+          <div style="display: flex; gap: 15px;">
+            <div style="flex: 1;">
+              <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Nombre de Semaines</label>
+              <input type="number" v-model="newSeasonWeeks" min="1" max="52" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;" />
+            </div>
+            <div style="flex: 1;">
+              <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Séances par Semaine</label>
+              <input type="number" v-model="newSeasonSessions" min="1" max="7" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px;" />
+            </div>
+          </div>
+          
+          <button @click="generateProgram" :disabled="isGenerating" style="width: 100%; padding: 15px; margin-top: 10px; background: #e38734; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(227, 135, 52, 0.3);">
+            {{ isGenerating ? 'Génération en cours...' : '⚡ Générer la Saison' }}
+          </button>
+
+          <p v-if="generateMessage" style="text-align: center; font-weight: bold; margin-top: 10px;" :style="{ color: generateMessage.includes('❌') ? '#d32f2f' : '#4CAF50' }">
+            {{ generateMessage }}
+          </p>
+        </div>
+
       </div>
     </div>
 
@@ -344,17 +418,6 @@ onMounted(() => {
             </tr>
           </tbody>
         </table>
-      </div>
-    </div>
-
-    <!-- TAB : PROGRAMME CRUD -->
-    <div v-if="activeTab === 'program'">
-      <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center;">
-        <h2 style="color: #4CAF50; margin-top: 0;">Éditeur de programme</h2>
-        <p style="color: #666;">L'interface de gestion (Créer/Modifier/Supprimer) pour les saisons, semaines, et entraînements s'affichera ici.</p>
-        <button style="padding: 10px 20px; background: #e38734; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: not-allowed; opacity: 0.5;">
-          + Ajouter une saison (Bientôt)
-        </button>
       </div>
     </div>
 

@@ -28,7 +28,6 @@ try {
 
     } elseif ($action === 'history') {
         $user_id = $_GET['user_id'] ?? 0;
-        
         $stmt = $pdo->prepare("
             SELECT l.*, 
                    COALESCE(s.order_num, 1) as session_index, 
@@ -79,13 +78,88 @@ try {
         echo json_encode(["status" => "success", "data" => $stmt->fetchAll()]);
         
     } elseif ($action === 'delete_feedback') {
-        // NOUVELLE ROUTE : Suppression d'un signalement
         $feedback_id = $_GET['id'] ?? 0;
         $stmt = $pdo->prepare("DELETE FROM AD_feedbacks WHERE id = ?");
         $stmt->execute([$feedback_id]);
         echo json_encode(["status" => "success"]);
+        
+    } elseif ($action === 'generate_season') {
+        // NOUVELLE ROUTE : Générateur Algorithmique
+        $data = json_decode(file_get_contents("php://input"), true);
+        $title = $data['title'] ?? 'Nouvelle Saison';
+        $weeks = (int)($data['weeks'] ?? 12);
+        $sessionsPerWeek = (int)($data['sessionsPerWeek'] ?? 3);
+
+        if ($weeks < 1 || $sessionsPerWeek < 1) {
+            echo json_encode(["status" => "error", "message" => "Paramètres invalides"]);
+            exit;
+        }
+
+        $pdo->beginTransaction();
+
+        // 1. Créer la Saison
+        $stmtOrder = $pdo->query("SELECT MAX(order_num) FROM AD_seasons");
+        $season_order = ((int)$stmtOrder->fetchColumn()) + 1;
+
+        $stmtSeason = $pdo->prepare("INSERT INTO AD_seasons (title, order_num) VALUES (?, ?)");
+        $stmtSeason->execute([$title, $season_order]);
+        $season_id = $pdo->lastInsertId();
+
+        $totalSessions = $weeks * $sessionsPerWeek;
+        $globalSession = 1;
+
+        $stmtWeek = $pdo->prepare("INSERT INTO AD_weeks (season_id, title, order_num) VALUES (?, ?, ?)");
+        $stmtSession = $pdo->prepare("INSERT INTO AD_sessions (week_id, title, order_num) VALUES (?, ?, ?)");
+        $stmtExo = $pdo->prepare("INSERT INTO AD_exercises (session_id, type, duration_seconds, order_num) VALUES (?, ?, ?, ?)");
+
+        // 2. Boucle des Semaines
+        for ($w = 1; $w <= $weeks; $w++) {
+            $stmtWeek->execute([$season_id, "Semaine $w", $w]);
+            $week_id = $pdo->lastInsertId();
+
+            // 3. Boucle des Entraînements (Sessions)
+            for ($s = 1; $s <= $sessionsPerWeek; $s++) {
+                $session_title = "Semaine $w - Entraînement $s";
+                $stmtSession->execute([$week_id, $session_title, $s]);
+                $session_id = $pdo->lastInsertId();
+
+                $exo_order = 1;
+                
+                // --- A. TOUJOURS : Échauffement (5 min) ---
+                $stmtExo->execute([$session_id, 'echauffement', 300, $exo_order++]);
+
+                // --- B. CRESCENDO ALGORYTHMIQUE ---
+                $progressFactor = ($globalSession - 1) / max(1, ($totalSessions - 1)); // Va de 0.0 à 1.0
+                
+                // La durée de course augmente (de 1 min à 30 min)
+                $runTime = round(60 + ($progressFactor * 1740)); 
+                // La durée de marche diminue (de 2 min à 0 min)
+                $walkTime = round(120 - ($progressFactor * 120)); 
+                // La durée totale du corps de la séance augmente (de 15 min à 40 min)
+                $coreTargetTime = (15 * 60) + round($progressFactor * 25 * 60); 
+                
+                $accumulated = 0;
+                while ($accumulated < $coreTargetTime) {
+                    $stmtExo->execute([$session_id, 'trottes', $runTime, $exo_order++]);
+                    $accumulated += $runTime;
+
+                    if ($walkTime > 15 && $accumulated < $coreTargetTime) {
+                        $stmtExo->execute([$session_id, 'marches', $walkTime, $exo_order++]);
+                        $accumulated += $walkTime;
+                    }
+                }
+
+                // --- C. TOUJOURS : Étirements (5 min) ---
+                $stmtExo->execute([$session_id, 'etirements', 300, $exo_order++]);
+
+                $globalSession++;
+            }
+        }
+        $pdo->commit();
+        echo json_encode(["status" => "success", "message" => "Saison générée avec succès !"]);
     }
 } catch (Exception $e) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
     http_response_code(500);
     echo json_encode(["status" => "error", "message" => "Erreur SQL : " . $e->getMessage()]);
 }
