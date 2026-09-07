@@ -252,34 +252,39 @@ onMounted(() => { store.initApp() })
         </button>
       </div>
 
-      <!-- --- NOUVELLE SECTION : LES 3 PROCHAINES SESSIONS --- -->
+     <!-- --- SECTION : LES 3 PROCHAINES SESSIONS (Allégée) --- -->
       <div v-if="upcomingSessions.length > 0" style="margin-top: 30px; margin-bottom: 25px;">
-        <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px;">À venir...</h3>
-        <ul style="list-style: none; padding: 0; margin: 0;">
-          <li v-for="session in upcomingSessions" :key="'up-' + session.id" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; background: #fff; overflow: hidden;">
+        <h3 style="color: #333; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">À venir...</h3>
+        
+        <!-- Conteneur unique fusionné -->
+        <div style="background: #fff; border-radius: 12px; border: 1px solid #ddd; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+          <div v-for="(session, index) in upcomingSessions" :key="'up-' + session.id" 
+               :style="{ borderBottom: index < upcomingSessions.length - 1 ? '1px solid #eee' : 'none' }">
+            
             <div @click="toggleUpcoming(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
               <div>
-                <div style="font-weight: bold; color: #e38734; font-size: 0.95rem;">
+                <div style="font-weight: bold; color: #e38734; font-size: 0.9rem;">
                   {{ session.weekTitle }} - Entraînement {{ session.sessionIndex }}
                 </div>
                 <div style="color: #666; font-size: 0.85rem; margin-top: 2px;">
                   {{ session.title.split(' - ')[1] || session.title }} • {{ session.durationMin }} min
                 </div>
               </div>
-              <div style="color: #aaa; font-size: 14px; font-weight: bold;">
+              <div style="color: #aaa; font-size: 12px; font-weight: bold;">
                 {{ expandedUpcomingId === session.id ? '▲' : '▼' }}
               </div>
             </div>
             
-            <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 15px; border-top: 1px solid #eee;">
+            <!-- Détails internes -->
+            <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 12px 15px; border-top: 1px solid #eee;">
               <div v-for="(exo, i) in session.exercises" :key="i" 
-                   style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ddd; font-size: 0.9rem; color: #444;">
+                   style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #ddd; font-size: 0.85rem; color: #555;">
                 <span style="text-transform: capitalize;">{{ exo.type }}</span>
                 <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
               </div>
             </div>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
 
       <!-- Historique des sessions terminées -->
