@@ -34,6 +34,15 @@ const openWeekSelector = () => {
 }
 
 // Calcul des totaux
+const totalSessionsInSeason = computed(() => {
+  if (!store.seasonData) return 0
+  return store.seasonData.weeks.reduce((acc, week) => acc + week.sessions.length, 0)
+})
+
+const seasonProgressPercent = computed(() => {
+  if (totalSessionsInSeason.value === 0) return 0
+  return Math.round((store.completedSessions.length / totalSessionsInSeason.value) * 100)
+})
 const totalDistance = computed(() => {
   const sum = store.completedSessions.reduce((acc, session) => acc + (parseFloat(session.distance) || 0), 0)
   return sum.toFixed(2)
@@ -80,21 +89,41 @@ onMounted(() => { store.initApp() })
     </div>
     
     <div v-else>
-      <div v-if="store.currentSessionDetails" style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-        <h2 style="margin-top: 0; font-size: 1.2rem;">Ta progression actuelle</h2>
-        <p style="margin: 5px 0;"><strong>Programme :</strong> {{ store.seasonData.title }}</p>
-        <p style="margin: 5px 0;"><strong>Semaine :</strong> {{ store.currentSessionDetails.week.title }}</p>
-        <p style="margin: 5px 0;"><strong>Prochaine course :</strong> {{ store.currentSessionDetails.session.title }}</p>
+     <!-- Barre de progression globale de la saison -->
+      <div v-if="store.seasonData" style="margin-bottom: 25px; padding: 0 5px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: bold;">
+          <span style="color: inherit;">Progression : {{ store.seasonData.title }} ({{ store.seasonData.weeks.length }} semaines)</span>
+          <span style="color: #4CAF50;">{{ seasonProgressPercent }}%</span>
+        </div>
+        <div style="height: 12px; background: #e0e0e0; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+          <div :style="{ width: seasonProgressPercent + '%', height: '100%', background: '#4CAF50', transition: 'width 0.5s ease-in-out' }"></div>
+        </div>
+      </div>
+
+      <!-- Carte de la prochaine session (Style JCPMF) -->
+      <div v-if="store.currentSessionDetails" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee;">
         
-        <!-- Affichage des totaux -->
-        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; display: flex; justify-content: space-around;">
+        <!-- En-tête Gris : Semaine -->
+        <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: white !important;">{{ store.currentSessionDetails.week.title }}</span>
+          <span style="font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; color: white !important;">Prochaine course</span>
+        </div>
+        
+        <!-- Sous-titre Orange : Jour -->
+        <div style="background: #e38734; color: white; padding: 8px 15px; font-weight: bold; font-size: 1.05rem;">
+          <span style="color: white !important;">{{ store.currentSessionDetails.session.title.split(' - ')[1] || store.currentSessionDetails.session.title }}</span>
+        </div>
+        
+        <!-- Statistiques cumulées -->
+        <div style="padding: 20px 15px; display: flex; justify-content: space-around;">
           <div style="text-align: center;">
-            <div style="font-size: 1.2rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
-            <div style="font-size: 0.85rem; color: #666;">Distance totale</div>
+            <div style="font-size: 1.5rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
+            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Distance totale</div>
           </div>
+          <div style="width: 1px; background: #eee;"></div>
           <div style="text-align: center;">
-            <div style="font-size: 1.2rem; color: #4CAF50; font-weight: bold;">{{ totalSteps }}</div>
-            <div style="font-size: 0.85rem; color: #666;">Pas cumulés</div>
+            <div style="font-size: 1.5rem; color: #4CAF50; font-weight: bold;">{{ totalSteps }}</div>
+            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Pas cumulés</div>
           </div>
         </div>
       </div>
