@@ -68,8 +68,8 @@ try {
             foreach ($runners as $row) { fputcsv($output, $row); }
             fclose($output);
         }
+        
     } elseif ($action === 'feedbacks') {
-        // NOUVELLE ROUTE : Récupération des signalements
         $stmt = $pdo->query("
             SELECT f.*, u.first_name, u.email 
             FROM AD_feedbacks f 
@@ -77,6 +77,13 @@ try {
             ORDER BY f.created_at DESC
         ");
         echo json_encode(["status" => "success", "data" => $stmt->fetchAll()]);
+        
+    } elseif ($action === 'delete_feedback') {
+        // NOUVELLE ROUTE : Suppression d'un signalement
+        $feedback_id = $_GET['id'] ?? 0;
+        $stmt = $pdo->prepare("DELETE FROM AD_feedbacks WHERE id = ?");
+        $stmt->execute([$feedback_id]);
+        echo json_encode(["status" => "success"]);
     }
 } catch (Exception $e) {
     http_response_code(500);

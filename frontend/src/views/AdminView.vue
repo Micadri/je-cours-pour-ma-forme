@@ -11,7 +11,7 @@ const runners = ref([])
 const errorMessage = ref('')
 const isLoading = ref(true)
 
-// Nouveaux états pour les feedbacks
+// États pour les feedbacks
 const feedbacks = ref([])
 const isFeedbacksLoading = ref(true)
 
@@ -62,8 +62,9 @@ const fetchRunners = async () => {
   }
 }
 
-// Nouvelle fonction pour charger les feedbacks
+// Charger les feedbacks
 const fetchFeedbacks = async () => {
+  isFeedbacksLoading.value = true
   const token = localStorage.getItem('auth_token')
   try {
     const res = await fetch(`${API_BASE}/admin/users.php?action=feedbacks`, {
@@ -77,6 +78,27 @@ const fetchFeedbacks = async () => {
     console.error("Erreur chargement feedbacks", e)
   } finally {
     isFeedbacksLoading.value = false
+  }
+}
+
+// Supprimer un feedback
+const deleteFeedback = async (id) => {
+  if (!confirm("Voulez-vous vraiment supprimer ce signalement ?")) return
+
+  const token = localStorage.getItem('auth_token')
+  try {
+    const res = await fetch(`${API_BASE}/admin/users.php?action=delete_feedback&id=${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (data.status === 'success') {
+      // Retire visuellement le feedback sans recharger toute la page
+      feedbacks.value = feedbacks.value.filter(fb => fb.id !== id)
+    } else {
+      alert("Erreur lors de la suppression.")
+    }
+  } catch (e) {
+    alert("Erreur réseau.")
   }
 }
 
@@ -151,7 +173,7 @@ const exportData = async (format) => {
 
 onMounted(() => { 
   fetchRunners()
-  fetchFeedbacks() // On charge les retours en même temps
+  fetchFeedbacks()
 })
 </script>
 
@@ -173,7 +195,6 @@ onMounted(() => {
       <button @click="activeTab = 'runners'" :style="{ background: activeTab === 'runners' ? '#4CAF50' : 'transparent', color: activeTab === 'runners' ? 'white' : '#666', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }">
         👥 Les Coureurs
       </button>
-      <!-- Nouvel onglet Signalements -->
       <button @click="activeTab = 'feedbacks'" :style="{ background: activeTab === 'feedbacks' ? '#4CAF50' : 'transparent', color: activeTab === 'feedbacks' ? 'white' : '#666', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }">
         📬 Signalements
       </button>
@@ -226,8 +247,11 @@ onMounted(() => {
 
     <!-- TAB : SIGNALEMENTS -->
     <div v-if="activeTab === 'feedbacks'">
-      <div style="margin-bottom: 15px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h2 style="margin: 0; color: #4CAF50;">Retours utilisateurs ({{ feedbacks.length }})</h2>
+        <button @click="fetchFeedbacks" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+          🔄 Rafraîchir
+        </button>
       </div>
 
       <div v-if="isFeedbacksLoading" style="text-align: center; padding: 40px; color: #888;">Chargement des signalements...</div>
@@ -248,8 +272,15 @@ onMounted(() => {
                 De <strong>{{ fb.first_name || 'Inconnu' }}</strong> ({{ fb.email }})
               </div>
             </div>
-            <div style="font-size: 0.8rem; color: #aaa; text-align: right;">
-              {{ formatDate(fb.created_at) }}
+            
+            <!-- Zone Date + Bouton de suppression -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+              <div style="font-size: 0.8rem; color: #aaa; text-align: right;">
+                {{ formatDate(fb.created_at) }}
+              </div>
+              <button @click="deleteFeedback(fb.id)" style="background: #ffebee; border: 1px solid #ffcdd2; color: #f44336; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: background 0.2s;">
+                Supprimer
+              </button>
             </div>
           </div>
           <p style="margin: 0; color: #444; line-height: 1.5; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; white-space: pre-wrap;">
