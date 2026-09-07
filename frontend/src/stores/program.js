@@ -84,59 +84,49 @@ export const useProgramStore = defineStore('program', () => {
   }
   // ---------------------------------
 
-  async function initApp() {
+async function initApp() {
     const token = localStorage.getItem('auth_token')
     if (!token) return
-
     await syncQueue()
 
     try {
-      const res = await fetch('/program_5k.json')
-      const rawData = await res.json()
-      
-      const sourceProgram = Array.isArray(rawData) ? rawData[0] : rawData
-      const formattedData = { title: sourceProgram.label || "Programme 5K", weeks: [] }
-      const weeksMap = {}
-      let sessionIdCounter = 1
-
-      sourceProgram.etapes.forEach(etape => {
-        const match = etape.label.match(/Semaine\s*(\d+)/i)
-        const weekId = match ? parseInt(match[1]) : 1
-        if (!weeksMap[weekId]) weeksMap[weekId] = { id: weekId, title: `Semaine ${weekId}`, sessions: [] }
-        const mappedExercises = etape.steps.map(step => ({ type: step.type, duration_seconds: Math.round(step.time * 60) }))
-        weeksMap[weekId].sessions.push({ id: sessionIdCounter++, title: etape.label, exercises: mappedExercises })
-      })
-
-      formattedData.weeks = Object.values(weeksMap)
-      seasonData.value = formattedData
-      localStorage.setItem('pwa_cache_program', JSON.stringify(formattedData))
-
+      // 1. Récupération des données utilisateur (Profil et Progression)
       const progressRes = await fetch(`${API_BASE}/runner/progress.php?token=${token}`)
       const progressJson = await progressRes.json()
       
       if (progressJson.status === 'success') {
-         currentProgress.value = progressJson.data.progress
-         if (progressJson.data.history) {
-             sessionHistory.value = progressJson.data.history
-             localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
-         }
-         if (progressJson.data.profile) {
-             userProfile.value = progressJson.data.profile
-             localStorage.setItem('pwa_profile', JSON.stringify(userProfile.value))
-         }
+        currentProgress.value = progressJson.data.progress
+        sessionHistory.value = progressJson.data.history || []
+        userProfile.value = progressJson.data.profile || null
+        
+        localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
+        localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
+        if (userProfile.value) localStorage.setItem('pwa_profile', JSON.stringify(userProfile.value))
+      }
+
+      // 2. Récupération du programme d'entraînement via la Base de Données
+      const programRes = await fetch(`${API_BASE}/program/full.php?token=${token}`)
+      const programJson = await programRes.json()
+      
+      if (programJson.status === 'success') {
+        seasonData.value = programJson.data
+        localStorage.setItem('pwa_cache_program', JSON.stringify(seasonData.value))
       }
 
     } catch (e) {
+      // En cas d'erreur réseau, on bascule proprement sur le cache local
+      console.error("Erreur réseau dans initApp :", e)
       console.warn("Mode Hors-ligne activé. Chargement du cache.")
+      
       const cachedProgram = localStorage.getItem('pwa_cache_program')
       if (cachedProgram) seasonData.value = JSON.parse(cachedProgram)
-
+      
       const savedProgress = localStorage.getItem('pwa_progress')
       currentProgress.value = savedProgress ? JSON.parse(savedProgress) : { current_week_id: 1, current_session_id: 1 }
-
+      
       const savedHistory = localStorage.getItem('pwa_history')
       sessionHistory.value = savedHistory ? JSON.parse(savedHistory) : []
-
+      
       const savedProfile = localStorage.getItem('pwa_profile')
       if (savedProfile) userProfile.value = JSON.parse(savedProfile)
     }
