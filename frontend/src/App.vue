@@ -28,19 +28,19 @@ watch(() => store.userProfile?.theme, updateTheme)
 
 <style>
 /* Style global de base */
-/* Style global de base */
 html {
-  /* Active le défilement magnétique en douceur sur toute la page */
   scroll-behavior: smooth;
-  scroll-snap-type: y proximity;
+  /* Le secret est ici : "mandatory" force la page à s'arrêter sur une section */
+  scroll-snap-type: y mandatory !important; 
 }
 
 body {
   transition: background 0.3s, color 0.3s;
   margin: 0;
   background-color: #f9f9f9;
-  /* Assure que la hauteur s'adapte bien aux écrans de téléphone */
-  min-height: 100vh; 
+  min-height: 100vh;
+  /* Supprime le rebond "pull-to-refresh" du navigateur mobile */
+  overscroll-behavior-y: none; 
 }
 
 /* --- MODE SOMBRE : Fond adouci (Gris Anthracite) --- */

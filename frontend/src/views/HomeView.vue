@@ -118,7 +118,7 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
 </script>
 
 <template>
-  <main style="padding: 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+  <main style="padding: 20px 20px 50vh 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
     <h1 style="text-align: center; margin-bottom: 25px;">Vue d'ensemble</h1>
     
     <!-- SECTION 1 : EN-TÊTE ET PROGRESSION -->
