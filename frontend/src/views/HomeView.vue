@@ -53,10 +53,10 @@ const totalSteps = computed(() => {
   return store.completedSessions.reduce((acc, session) => acc + (parseInt(session.steps) || 0), 0)
 })
 
-// Variable pour ouvrir/fermer la preview
+// Variable pour ouvrir/fermer la preview de la course actuelle
 const showPreview = ref(false)
 
-// Calcul du numéro de l'entraînement dans la semaine (1, 2 ou 3)
+// Calcul du numéro de l'entraînement dans la semaine
 const nextSessionIndex = computed(() => {
   if (!store.currentSessionDetails) return 1
   const weekSessions = store.currentSessionDetails.week.sessions
@@ -64,7 +64,7 @@ const nextSessionIndex = computed(() => {
   return weekSessions.findIndex(s => s.id === currentId) + 1
 })
 
-// Calcul de la durée totale de la prochaine course en minutes
+// Calcul de la durée totale de la prochaine course
 const nextSessionDuration = computed(() => {
   if (!store.currentSessionDetails) return 0
   const exercises = store.currentSessionDetails.session.exercises
@@ -72,12 +72,42 @@ const nextSessionDuration = computed(() => {
   return Math.round(totalSeconds / 60)
 })
 
-// Formateur de temps pour la preview (ex: 1 min 30s)
+// Formateur de temps pour la preview
 const formatDuration = (seconds) => {
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
   if (m === 0) return `${s}s`
   return s > 0 ? `${m}min ${s}s` : `${m} min`
+}
+
+// --- NOUVEAU : Calcul des prochaines sessions à venir ---
+const upcomingSessions = computed(() => {
+  if (!store.seasonData || !store.currentProgress) return []
+  const currentId = Number(store.currentProgress.current_session_id)
+  const upcoming = []
+
+  for (const week of store.seasonData.weeks) {
+    let sessionIndex = 1
+    for (const session of week.sessions) {
+      // On ne prend que les sessions STRICTEMENT supérieures à la session actuelle
+      if (session.id > currentId) {
+        const durationSeconds = session.exercises.reduce((acc, exo) => acc + parseInt(exo.duration_seconds), 0)
+        upcoming.push({
+          ...session,
+          weekTitle: week.title,
+          sessionIndex,
+          durationMin: Math.round(durationSeconds / 60)
+        })
+      }
+      sessionIndex++
+    }
+  }
+  return upcoming.slice(0, 3) // On limite aux 3 prochaines courses pour ne pas surcharger l'écran
+})
+
+const expandedUpcomingId = ref(null)
+const toggleUpcoming = (id) => {
+  expandedUpcomingId.value = expandedUpcomingId.value === id ? null : id
 }
 
 const startSession = () => router.push('/run')
@@ -222,11 +252,42 @@ onMounted(() => { store.initApp() })
         </button>
       </div>
 
+      <!-- --- NOUVELLE SECTION : LES 3 PROCHAINES SESSIONS --- -->
+      <div v-if="upcomingSessions.length > 0" style="margin-top: 30px; margin-bottom: 25px;">
+        <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px;">À venir...</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li v-for="session in upcomingSessions" :key="'up-' + session.id" style="border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; background: #fff; overflow: hidden;">
+            <div @click="toggleUpcoming(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
+              <div>
+                <div style="font-weight: bold; color: #e38734; font-size: 0.95rem;">
+                  {{ session.weekTitle }} - Entraînement {{ session.sessionIndex }}
+                </div>
+                <div style="color: #666; font-size: 0.85rem; margin-top: 2px;">
+                  {{ session.title.split(' - ')[1] || session.title }} • {{ session.durationMin }} min
+                </div>
+              </div>
+              <div style="color: #aaa; font-size: 14px; font-weight: bold;">
+                {{ expandedUpcomingId === session.id ? '▲' : '▼' }}
+              </div>
+            </div>
+            
+            <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 15px; border-top: 1px solid #eee;">
+              <div v-for="(exo, i) in session.exercises" :key="i" 
+                   style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ddd; font-size: 0.9rem; color: #444;">
+                <span style="text-transform: capitalize;">{{ exo.type }}</span>
+                <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Historique des sessions terminées -->
       <SessionHistory />
 
     </div>
     
-    <!-- Nouvelle section : La boîte à outils -->
+    <!-- La boîte à outils -->
     <div style="margin-top: 30px; margin-bottom: 25px;">
       <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px;">Préparation & Conseils</h3>
       <div @click="router.push('/tips')" style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
