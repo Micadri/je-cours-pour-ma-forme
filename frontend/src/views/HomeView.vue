@@ -190,12 +190,13 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
             </div>
           </div>
           
-          <div style="text-align: right;">
+        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
             <div style="font-weight: bold; font-size: 1.3rem; color: white !important;">
               {{ nextSessionDuration }} min
             </div>
-            <div style="font-size: 0.75rem; color: white !important; margin-top: 2px; text-transform: uppercase; font-weight: 800; opacity: 0.95;">
-              DÉTAILS {{ showPreview ? '▲' : '▼' }}
+            <!-- Bouton "Détails" style Pilule -->
+            <div style="font-size: 0.75rem; color: white !important; margin-top: 6px; text-transform: uppercase; font-weight: bold; background: rgba(255, 255, 255, 0.25); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.4); display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: background 0.2s;">
+              Détails <span style="font-size: 0.65rem;">{{ showPreview ? '▲' : '▼' }}</span>
             </div>
           </div>
         </div>
