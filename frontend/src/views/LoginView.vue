@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useProgramStore } from '../stores/program'
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
+const store = useProgramStore()
 
 const handleLogin = async () => {
   errorMessage.value = ''
@@ -20,6 +22,7 @@ const handleLogin = async () => {
     
     if (data.status === 'success') {
       localStorage.setItem('auth_token', data.token)
+      await store.initApp()
       router.push('/')
     } else {
       errorMessage.value = data.message || 'Erreur de connexion'

@@ -1,12 +1,14 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useProgramStore } from '../stores/program'
 
 const firstName = ref('')
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
+const store = useProgramStore()
 
 const handleRegister = async () => {
   errorMessage.value = ''
@@ -22,6 +24,7 @@ const handleRegister = async () => {
     if (data.status === 'success') {
       // Sauvegarde du token et redirection immédiate vers le tableau de bord
       localStorage.setItem('auth_token', data.token)
+      await store.initApp()
       router.push('/')
     } else {
       errorMessage.value = data.message || 'Erreur lors de l\'inscription'
