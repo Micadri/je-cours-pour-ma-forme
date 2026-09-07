@@ -134,12 +134,15 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
         </h2>
       </div>
       
-      <!-- Boutons En-tête -->
+<!-- Boutons En-tête -->
       <div v-if="!isGuest" style="display: flex; gap: 10px; flex-shrink: 0;">
         <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Profil</button>
         <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Déconnexion</button>
       </div>
       <div v-else style="display: flex; gap: 10px; flex-shrink: 0;">
+        <button @click="router.push('/login')" style="padding: 8px 15px; background: transparent; color: #4CAF50; border: 1px solid #4CAF50; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
+          Se connecter
+        </button>
         <button @click="router.push('/register')" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
           S'inscrire
         </button>
