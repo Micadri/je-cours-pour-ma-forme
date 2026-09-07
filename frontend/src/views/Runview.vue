@@ -100,6 +100,11 @@ const closeAndSave = async () => {
   router.push('/')
 }
 
+const closeAndRegister = async () => {
+  await store.completeSession(finalStats.value.distance, finalStats.value.steps)
+  router.push('/register')
+}
+
 onMounted(async () => {
   if (!isDataReady.value) await store.initApp()
   if (currentSession.value) initStep()
@@ -161,7 +166,7 @@ const shareSession = async () => {
             <p style="text-align: center; color: #555; font-size: 0.9rem; margin-bottom: 15px; font-style: italic;">
               Créez un compte gratuit pour sauvegarder cette course et débloquer la suite du programme !
             </p>
-            <button @click="closeAndSave" style="width: 100%; padding: 15px; background: #e38734; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(227, 135, 52, 0.3);">
+            <button @click="closeAndRegister" style="width: 100%; padding: 15px; background: #e38734; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(227, 135, 52, 0.3);">
               S'inscrire maintenant
             </button>
             </div>
