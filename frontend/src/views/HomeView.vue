@@ -134,7 +134,7 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
         </h2>
       </div>
       
-      <!-- Boutons -->
+      <!-- Boutons En-tête -->
       <div v-if="!isGuest" style="display: flex; gap: 10px; flex-shrink: 0;">
         <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Profil</button>
         <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Déconnexion</button>
@@ -146,10 +146,12 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
       </div>
     </div>
 
+    <!-- Chargement -->
     <div v-if="!store.seasonData || !store.currentProgress">
       <p style="text-align: center;">Synchronisation en cours...</p>
     </div>
     
+    <!-- Contenu Principal -->
     <div v-else>
       <!-- Barre de progression globale de la saison -->
       <div v-if="store.seasonData" style="margin-bottom: 25px; padding: 0 5px;">
@@ -165,7 +167,6 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
       <!-- Carte de la prochaine session (Style JCPMF) -->
       <div v-if="store.currentSessionDetails" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee;">
         
-        <!-- En-tête Gris : Semaine (sur X) -->
         <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
           <span style="color: white !important;">
             {{ store.currentSessionDetails.week.title }} (sur {{ store.seasonData.weeks.length }})
@@ -175,7 +176,6 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
           </span>
         </div>
         
-        <!-- Sous-titre Orange INTERACTIF : Jour et Durée -->
         <div @click="showPreview = !showPreview" style="background: #e38734; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
           <div>
             <div style="font-weight: bold; font-size: 1.1rem; color: white !important;">
@@ -195,7 +195,6 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
           </div>
         </div>
 
-        <!-- Zone de Preview (déroulante) -->
         <div v-if="showPreview" style="background: #fafafa; padding: 15px; border-bottom: 1px solid #eee;">
            <div v-for="(exo, i) in store.currentSessionDetails.session.exercises" :key="i" 
                 style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ddd; font-size: 0.95rem; color: #444;">
@@ -204,7 +203,6 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
            </div>
         </div>
         
-        <!-- Statistiques cumulées globales -->
         <div style="padding: 20px 15px; display: flex; justify-content: space-around;">
           <div style="text-align: center;">
             <div style="font-size: 1.5rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
@@ -230,15 +228,7 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
           v-if="!showWeekSelector"
           @click="openWeekSelector" 
           :disabled="availableWeeks.length === 0"
-          :style="{
-            flex: 1, 
-            background: availableWeeks.length === 0 ? '#f0f0f0' : '#e0e0e0', 
-            border: 'none', 
-            borderRadius: '5px', 
-            cursor: availableWeeks.length === 0 ? 'not-allowed' : 'pointer', 
-            color: availableWeeks.length === 0 ? '#aaa' : '#333', 
-            fontWeight: 'bold'
-          }"
+          :style="{ flex: 1, background: availableWeeks.length === 0 ? '#f0f0f0' : '#e0e0e0', border: 'none', borderRadius: '5px', cursor: availableWeeks.length === 0 ? 'not-allowed' : 'pointer', color: availableWeeks.length === 0 ? '#aaa' : '#333', fontWeight: 'bold' }"
         >
           Reset Semaine
         </button>
@@ -257,58 +247,62 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
       </div>
 
       <!-- ============================================== -->
-      <!-- ZONE VERROUILLÉE POUR LES INVITÉS (Floutage)   -->
+      <!-- ZONE VERROUILLÉE POUR LES INVITÉS              -->
       <!-- ============================================== -->
       <div style="position: relative; margin-top: 30px;">
         
-        <div v-if="isGuest" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(128, 128, 128, 0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 10; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
-          <button @click="router.push('/register')" style="padding: 15px 25px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);">
+        <div v-if="isGuest" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; align-items: center; justify-content: center;">
+          <button @click="router.push('/register')" style="padding: 15px 25px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,0.15);">
             🔒 Créer un compte pour débloquer
           </button>
         </div>
 
-        <!-- Le contenu derrière le flou (clics désactivés si invité) -->
-        <div :style="{ pointerEvents: isGuest ? 'none' : 'auto', opacity: isGuest ? 0.6 : 1 }">
+        <div :style="{ pointerEvents: isGuest ? 'none' : 'auto' }">
           
-          <!-- SECTION : LES 3 PROCHAINES SESSIONS -->
+          <!-- À venir -->
           <div v-if="upcomingSessions.length > 0" style="margin-bottom: 25px;">
             <h3 style="color: #333; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">À venir...</h3>
             
-            <div style="background: #fff; border-radius: 12px; border: 1px solid #ddd; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-              <div v-for="(session, index) in upcomingSessions" :key="'up-' + session.id" 
-                   :style="{ borderBottom: index < upcomingSessions.length - 1 ? '1px solid #eee' : 'none' }">
-                
-                <div @click="toggleUpcoming(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
-                  <div>
-                    <div style="font-weight: bold; color: #e38734; font-size: 0.9rem;">
-                      {{ session.weekTitle }} - Entraînement {{ session.sessionIndex }}
+            <div :style="{ filter: isGuest ? 'blur(5px)' : 'none', opacity: isGuest ? 0.6 : 1, transition: 'all 0.3s' }">
+              <div style="background: #fff; border-radius: 12px; border: 1px solid #ddd; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                <div v-for="(session, index) in upcomingSessions" :key="'up-' + session.id" :style="{ borderBottom: index < upcomingSessions.length - 1 ? '1px solid #eee' : 'none' }">
+                  <div @click="toggleUpcoming(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
+                    <div>
+                      <div style="font-weight: bold; color: #e38734; font-size: 0.9rem;">
+                        {{ session.weekTitle }} - Entraînement {{ session.sessionIndex }}
+                      </div>
+                      <div style="color: #666; font-size: 0.85rem; margin-top: 2px;">
+                        {{ session.title.split(' - ')[1] || session.title }} • {{ session.durationMin }} min
+                      </div>
                     </div>
-                    <div style="color: #666; font-size: 0.85rem; margin-top: 2px;">
-                      {{ session.title.split(' - ')[1] || session.title }} • {{ session.durationMin }} min
+                    <div style="color: #aaa; font-size: 12px; font-weight: bold;">
+                      {{ expandedUpcomingId === session.id ? '▲' : '▼' }}
                     </div>
                   </div>
-                  <div style="color: #aaa; font-size: 12px; font-weight: bold;">
-                    {{ expandedUpcomingId === session.id ? '▲' : '▼' }}
-                  </div>
-                </div>
-                
-                <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 12px 15px; border-top: 1px solid #eee;">
-                  <div v-for="(exo, i) in session.exercises" :key="i" 
-                       style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #ddd; font-size: 0.85rem; color: #555;">
-                    <span style="text-transform: capitalize;">{{ exo.type }}</span>
-                    <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
+                  
+                  <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 12px 15px; border-top: 1px solid #eee;">
+                    <div v-for="(exo, i) in session.exercises" :key="i" style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #ddd; font-size: 0.85rem; color: #555;">
+                      <span style="text-transform: capitalize;">{{ exo.type }}</span>
+                      <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Historique des sessions terminées -->
-          <SessionHistory />
+          <!-- Historique -->
+          <div style="margin-bottom: 25px;">
+            <h3 style="color: #333; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">Mes sessions</h3>
+            <div :style="{ filter: isGuest ? 'blur(5px)' : 'none', opacity: isGuest ? 0.6 : 1, transition: 'all 0.3s' }">
+              <SessionHistory />
+            </div>
+          </div>
 
         </div>
       </div>
-    </div>
+
+    </div> <!-- Cette balise manquait pour fermer la div v-else du contenu principal ! -->
     
     <!-- La boîte à outils -->
     <div style="margin-top: 30px; margin-bottom: 25px;">

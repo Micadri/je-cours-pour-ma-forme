@@ -23,10 +23,8 @@ const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
 </script>
 
 <template>
-  <div style="margin-bottom: 25px;">
-    <h3 style="color: #333; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">Mes sessions</h3>
-    
-    <p v-if="store.completedSessions.length === 0" style="color: #888; text-align: center; font-style: italic; margin-top: 15px;">
+  <div>
+    <p v-if="store.completedSessions.length === 0" style="color: #888; text-align: center; font-style: italic; margin-top: 5px;">
       Aucune course terminée pour le moment.
     </p>
     
@@ -57,7 +55,6 @@ const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
               <div style="font-size: 0.75rem; color: #888; text-transform: uppercase;">Pas</div>
             </div>
           </div>
-
         </div>
       </div>
 
