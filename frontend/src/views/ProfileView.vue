@@ -1,5 +1,4 @@
 <script setup>
-// 1. Ajout de onMounted et watch ici
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProgramStore } from '../stores/program'
@@ -13,24 +12,21 @@ const theme = ref('light')
 const avatarBase64 = ref('')
 const saveMessage = ref('')
 
-const loadUserData = () => {
-  if (store.userProfile) {
-    firstName.value = store.userProfile.first_name || ''
-    audioEnabled.value = store.userProfile.audio_enabled == 1
-    theme.value = store.userProfile.theme || 'light'
-    avatarBase64.value = store.userProfile.avatar || ''
+// Le paramètre { immediate: true } force le remplissage dès que les données arrivent
+watch(() => store.userProfile, (newProfile) => {
+  if (newProfile) {
+    firstName.value = newProfile.first_name || ''
+    audioEnabled.value = newProfile.audio_enabled == 1
+    theme.value = newProfile.theme || 'light'
+    avatarBase64.value = newProfile.avatar || ''
   }
-}
+}, { immediate: true })
 
 onMounted(async () => {
   if (!store.userProfile) {
     await store.initApp()
   }
-  loadUserData()
 })
-
-// 2. Le watch est sorti de sendFeedback et placé à la racine du script
-watch(() => store.userProfile, loadUserData)
 
 const handleFileUpload = (event) => {
   const file = event.target.files[0]
