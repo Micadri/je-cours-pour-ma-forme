@@ -110,4 +110,12 @@ body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
   color: #ffffff !important;
   border: 1px solid #555 !important;
 }
+/* 7. LABEL "Changer la photo" (Gris un chouia plus clair) */
+body.dark-mode label[style*="background: #e0e0e0"],
+body.dark-mode label[style*="background: rgb(224, 224, 224)"],
+body.dark-mode label[style*="background-color: rgb(224, 224, 224)"] {
+  background-color: #353842 !important; /* Le même gris nuancé que l'intérieur des sessions */
+  color: #e0e0e0 !important;
+  border: 1px solid #4a4d59 !important;
+}
 </style>
