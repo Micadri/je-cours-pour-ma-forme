@@ -1,18 +1,37 @@
 <script setup>
-import { ref } from 'vue'
+// 1. Ajout de onMounted et watch ici
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProgramStore } from '../stores/program'
 
 const router = useRouter()
 const store = useProgramStore()
 
-const firstName = ref(store.userProfile?.first_name || '')
-const audioEnabled = ref(store.userProfile?.audio_enabled == 1)
-const theme = ref(store.userProfile?.theme || 'light')
-const avatarBase64 = ref(store.userProfile?.avatar || '')
+const firstName = ref('')
+const audioEnabled = ref(true)
+const theme = ref('light')
+const avatarBase64 = ref('')
 const saveMessage = ref('')
 
-// Compresseur d'image intégré (évite de faire planter la Base de Données)
+const loadUserData = () => {
+  if (store.userProfile) {
+    firstName.value = store.userProfile.first_name || ''
+    audioEnabled.value = store.userProfile.audio_enabled == 1
+    theme.value = store.userProfile.theme || 'light'
+    avatarBase64.value = store.userProfile.avatar || ''
+  }
+}
+
+onMounted(async () => {
+  if (!store.userProfile) {
+    await store.initApp()
+  }
+  loadUserData()
+})
+
+// 2. Le watch est sorti de sendFeedback et placé à la racine du script
+watch(() => store.userProfile, loadUserData)
+
 const handleFileUpload = (event) => {
   const file = event.target.files[0]
   if (!file) return
@@ -24,7 +43,6 @@ const handleFileUpload = (event) => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
       
-      // Taille max de la miniature : 200x200
       const MAX_SIZE = 200
       let width = img.width
       let height = img.height
@@ -39,7 +57,6 @@ const handleFileUpload = (event) => {
       canvas.height = height
       ctx.drawImage(img, 0, 0, width, height)
       
-      // Conversion en Base64 allégé (JPEG qualité 80%)
       avatarBase64.value = canvas.toDataURL('image/jpeg', 0.8)
     }
     img.src = e.target.result
@@ -57,6 +74,7 @@ const saveProfile = async () => {
   saveMessage.value = 'Profil mis à jour !'
   setTimeout(() => saveMessage.value = '', 3000)
 }
+
 const showFeedback = ref(false)
 const feedbackSubject = ref('bug')
 const feedbackMessage = ref('')

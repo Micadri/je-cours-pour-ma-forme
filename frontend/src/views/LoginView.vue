@@ -4,10 +4,11 @@ import { useRouter } from 'vue-router'
 import { useProgramStore } from '../stores/program'
 
 const router = useRouter()
+const store = useProgramStore()
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
-const store = useProgramStore()
+
 
 const handleLogin = async () => {
   errorMessage.value = ''

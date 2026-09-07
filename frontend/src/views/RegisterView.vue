@@ -5,10 +5,11 @@ import { useProgramStore } from '../stores/program'
 
 const firstName = ref('')
 const router = useRouter()
+const store = useProgramStore()
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
-const store = useProgramStore()
+
 
 const handleRegister = async () => {
   errorMessage.value = ''
