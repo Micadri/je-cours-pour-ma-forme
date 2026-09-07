@@ -134,7 +134,7 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
         </h2>
       </div>
       
-<!-- Boutons En-tête -->
+      <!-- Boutons En-tête -->
       <div v-if="!isGuest" style="display: flex; gap: 10px; flex-shrink: 0;">
         <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Profil</button>
         <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Déconnexion</button>
@@ -167,7 +167,7 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
         </div>
       </div>
 
-<!-- Carte de la prochaine session (Style JCPMF Amélioré) -->
+      <!-- Carte de la prochaine session (Style JCPMF Amélioré) -->
       <div v-if="store.currentSessionDetails" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee;">
         
         <!-- En-tête Gris : Uniquement la Semaine centrée -->
@@ -177,7 +177,7 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
           </span>
         </div>
         
-        <!-- Sous-titre Orange INTERACTIF : Prochaine course et Session -->
+        <!-- Sous-titre Orange INTERACTIF -->
         <div @click="showPreview = !showPreview" style="background: #e38734; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.2);">
           <div>
             <!-- Nouveau badge Prochaine course -->
@@ -190,7 +190,7 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
             </div>
           </div>
           
-        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+          <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
             <div style="font-weight: bold; font-size: 1.3rem; color: white !important;">
               {{ nextSessionDuration }} min
             </div>
@@ -280,17 +280,21 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
               <div style="background: #fff; border-radius: 12px; border: 1px solid #ddd; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                 <div v-for="(session, index) in upcomingSessions" :key="'up-' + session.id" :style="{ borderBottom: index < upcomingSessions.length - 1 ? '1px solid #eee' : 'none' }">
                   <div @click="toggleUpcoming(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
+                    
                     <div>
-                      <div style="font-weight: bold; color: #e38734; font-size: 0.9rem;">
-                        {{ session.weekTitle }} - Entraînement {{ session.sessionIndex }}
+                      <div style="font-weight: bold; color: #e38734; font-size: 0.95rem;">
+                        {{ session.weekTitle }}
                       </div>
                       <div style="color: #666; font-size: 0.85rem; margin-top: 2px;">
-                        {{ session.title.split(' - ')[1] || session.title }} • {{ session.durationMin }} min
+                        {{ session.sessionIndex === 1 ? '1ère' : session.sessionIndex + 'ème' }} session de la semaine • {{ session.durationMin }} min
                       </div>
                     </div>
-                    <div style="color: #aaa; font-size: 12px; font-weight: bold;">
-                      {{ expandedUpcomingId === session.id ? '▲' : '▼' }}
+                    
+                    <!-- Bouton Pilule pour "À venir" -->
+                    <div style="font-size: 0.7rem; color: #888; text-transform: uppercase; font-weight: bold; background: #f4f4f4; padding: 4px 8px; border-radius: 12px; border: 1px solid #ddd; display: flex; align-items: center; gap: 4px;">
+                      Détails <span>{{ expandedUpcomingId === session.id ? '▲' : '▼' }}</span>
                     </div>
+
                   </div>
                   
                   <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 12px 15px; border-top: 1px solid #eee;">
@@ -315,7 +319,7 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
         </div>
       </div>
 
-    </div> <!-- Cette balise manquait pour fermer la div v-else du contenu principal ! -->
+    </div>
     
     <!-- La boîte à outils -->
     <div style="margin-top: 30px; margin-bottom: 25px;">

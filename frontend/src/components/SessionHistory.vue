@@ -20,6 +20,16 @@ const paginatedSessions = computed(() => {
 
 const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
 const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
+
+// Fonction pour trouver la position de l'entraînement dans la semaine
+const getSessionIndex = (sessionId) => {
+  if (!store.seasonData) return 1
+  for (const week of store.seasonData.weeks) {
+    const index = week.sessions.findIndex(s => s.id === sessionId)
+    if (index !== -1) return index + 1
+  }
+  return 1
+}
 </script>
 
 <template>
@@ -37,7 +47,9 @@ const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
           <div @click="toggleSessionDetails(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
             <div>
               <div style="font-weight: bold; color: #4CAF50; font-size: 0.9rem;">{{ session.weekTitle }}</div>
-              <div style="color: #555; font-size: 0.85rem; margin-top: 2px;">{{ session.title }}</div>
+              <div style="color: #555; font-size: 0.85rem; margin-top: 2px;">
+                {{ getSessionIndex(session.id) === 1 ? '1ère' : getSessionIndex(session.id) + 'ème' }} session de la semaine
+              </div>
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
               <span style="color: #aaa; font-size: 12px; font-weight: bold;">{{ expandedSessionId === session.id ? '▲' : '▼' }}</span>
