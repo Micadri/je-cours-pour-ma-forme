@@ -118,10 +118,10 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
 </script>
 
 <template>
-  <main style="padding: 20px 20px 50vh 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+  <main class="dashboard-container">
     <h1 style="text-align: center; margin-bottom: 25px;">Vue d'ensemble</h1>
     
-    <!-- SECTION 1 : EN-TÊTE ET PROGRESSION -->
+    <!-- SECTION 1 : EN-TÊTE ET PROGRESSION GLOBALE -->
     <section style="scroll-snap-align: start; scroll-margin-top: 20px; margin-bottom: 30px;">
       <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 25px; padding: 15px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
         <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 200px;">
@@ -163,12 +163,14 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
     
     <!-- Contenu Principal -->
     <div v-else>
-      
       <!-- SECTION 2 : COURSE ACTUELLE -->
       <section style="scroll-snap-align: start; scroll-margin-top: 20px; margin-bottom: 40px;">
         <div v-if="store.currentSessionDetails" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee;">
+          
           <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.15rem; text-align: center;">
-            <span style="color: white !important;">{{ store.currentSessionDetails.week.title }} (sur {{ store.seasonData.weeks.length }})</span>
+            <span style="color: white !important;">
+              {{ store.currentSessionDetails.week.title }} (sur {{ store.seasonData.weeks.length }})
+            </span>
           </div>
           
           <div @click="showPreview = !showPreview" style="background: #e38734; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.2);">
@@ -294,3 +296,20 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
     </section>
   </main>
 </template>
+
+<style scoped>
+/* Conteneur principal gérant la largeur selon l'écran */
+.dashboard-container {
+  padding: 20px 20px 50vh 20px;
+  font-family: sans-serif;
+  margin: 0 auto;
+  max-width: 600px; /* Largeur pour les téléphones */
+}
+
+/* Sur les ordinateurs et tablettes, on étire la vue à 900px */
+@media (min-width: 768px) {
+  .dashboard-container {
+    max-width: 900px;
+  }
+}
+</style>
