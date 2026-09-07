@@ -86,28 +86,33 @@ export const useProgramStore = defineStore('program', () => {
 
 async function initApp() {
     const token = localStorage.getItem('auth_token')
-    if (!token) return
-    await syncQueue()
+    const isGuest = localStorage.getItem('guest_mode') === 'true'
+    if (!token && !isGuest) return
+
+    if (token) await syncQueue()
 
     try {
-      // 1. Récupération des données utilisateur (Profil et Progression)
-      const progressRes = await fetch(`${API_BASE}/runner/progress.php?token=${token}`)
-      const progressJson = await progressRes.json()
-      
-      if (progressJson.status === 'success') {
-        currentProgress.value = progressJson.data.progress
-        sessionHistory.value = progressJson.data.history || []
-        userProfile.value = progressJson.data.profile || null
-        
-        localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
-        localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
-        if (userProfile.value) localStorage.setItem('pwa_profile', JSON.stringify(userProfile.value))
+      // 1. Récupération des données
+      if (token) {
+        const progressRes = await fetch(`${API_BASE}/runner/progress.php?token=${token}`)
+        const progressJson = await progressRes.json()
+        if (progressJson.status === 'success') {
+          currentProgress.value = progressJson.data.progress
+          sessionHistory.value = progressJson.data.history || []
+          userProfile.value = progressJson.data.profile || null
+          localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
+          localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
+        }
+      } else {
+        // Mode Invité : Chargement local
+        currentProgress.value = JSON.parse(localStorage.getItem('pwa_progress')) || { current_week_id: 1, current_session_id: 1 }
+        sessionHistory.value = JSON.parse(localStorage.getItem('pwa_history')) || []
+        userProfile.value = { first_name: 'Coureur', theme: 'light' }
       }
 
-      // 2. Récupération du programme d'entraînement via la Base de Données
-      const programRes = await fetch(`${API_BASE}/program/full.php?token=${token}`)
+      // 2. Récupération du programme (sans token !)
+      const programRes = await fetch(`${API_BASE}/program/full.php`)
       const programJson = await programRes.json()
-      
       if (programJson.status === 'success') {
         seasonData.value = programJson.data
         localStorage.setItem('pwa_cache_program', JSON.stringify(seasonData.value))

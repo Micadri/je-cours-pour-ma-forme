@@ -1,6 +1,5 @@
 <?php
 require __DIR__ . '/../config.php';
-$user = requireAuth($pdo);
 try {
     $stmtSeason = $pdo->query("SELECT id, title, order_num FROM AD_seasons LIMIT 1");
     $season = $stmtSeason->fetch();

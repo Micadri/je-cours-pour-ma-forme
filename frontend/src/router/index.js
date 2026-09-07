@@ -18,8 +18,9 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem('auth_token')
-  
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  const isGuest = localStorage.getItem('guest_mode') === 'true'
+
+  if (to.meta.requiresAuth && !isAuthenticated && !isGuest) {
     next('/welcome') // Redirection vers l'onboarding
   } else if ((to.name === 'login' || to.name === 'register' || to.name === 'welcome') && isAuthenticated) {
     next('/')

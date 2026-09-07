@@ -26,6 +26,10 @@ const slides = [
 const nextStep = () => {
   if (step.value < slides.length - 1) step.value++
 }
+const continueAsGuest = () => {
+  localStorage.setItem('guest_mode', 'true')
+  router.push('/')
+}
 </script>
 
 <template>
@@ -59,8 +63,10 @@ const nextStep = () => {
         <button @click="router.push('/login')" style="width: 100%; padding: 15px; background: transparent; color: #4CAF50; border: 2px solid #4CAF50; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;">
           J'ai déjà un compte
         </button>
+        <button @click="continueAsGuest" style="background: none; border: none; color: #888; font-size: 16px; text-decoration: underline; cursor: pointer; padding-top: 5px;">
+          Continuer sans compte
+        </button>
       </div>
     </div>
-
   </main>
 </template>

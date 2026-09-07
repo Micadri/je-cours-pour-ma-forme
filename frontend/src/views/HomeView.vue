@@ -80,7 +80,7 @@ const formatDuration = (seconds) => {
   return s > 0 ? `${m}min ${s}s` : `${m} min`
 }
 
-// --- NOUVEAU : Calcul des prochaines sessions à venir ---
+// Calcul des prochaines sessions à venir
 const upcomingSessions = computed(() => {
   if (!store.seasonData || !store.currentProgress) return []
   const currentId = Number(store.currentProgress.current_session_id)
@@ -89,7 +89,6 @@ const upcomingSessions = computed(() => {
   for (const week of store.seasonData.weeks) {
     let sessionIndex = 1
     for (const session of week.sessions) {
-      // On ne prend que les sessions STRICTEMENT supérieures à la session actuelle
       if (session.id > currentId) {
         const durationSeconds = session.exercises.reduce((acc, exo) => acc + parseInt(exo.duration_seconds), 0)
         upcoming.push({
@@ -102,7 +101,7 @@ const upcomingSessions = computed(() => {
       sessionIndex++
     }
   }
-  return upcoming.slice(0, 3) // On limite aux 3 prochaines courses pour ne pas surcharger l'écran
+  return upcoming.slice(0, 3) 
 })
 
 const expandedUpcomingId = ref(null)
@@ -113,6 +112,9 @@ const toggleUpcoming = (id) => {
 const startSession = () => router.push('/run')
 
 onMounted(() => { store.initApp() })
+
+// Vérification du mode invité
+const isGuest = computed(() => !localStorage.getItem('auth_token'))
 </script>
 
 <template>
@@ -126,18 +128,20 @@ onMounted(() => { store.initApp() })
           <img v-if="store.userProfile?.avatar" :src="store.userProfile.avatar" style="width: 100%; height: 100%; object-fit: cover;" />
           <span v-else style="color: white; font-size: 20px;">👤</span>
         </div>
-        <h2 style="margin: 0; font-size: 1.2rem; color: #333; line-height: 1.2;">
-          Bonjour, <br/><span style="color: #4CAF50;">{{ store.userProfile?.first_name || 'Coureur' }}</span> !
+       <h2 style="margin: 0; font-size: 1.2rem; color: #333; line-height: 1.2;">
+          Bonjour, <br/><span style="color: #4CAF50;">{{ store.userProfile?.first_name || 'Coureur' }}</span> 
+          <span v-if="isGuest" style="font-size: 0.8rem; color: #888; font-weight: normal; margin-left: 5px;">(Invité)</span>
         </h2>
       </div>
       
       <!-- Boutons -->
-      <div style="display: flex; gap: 10px; flex-shrink: 0;">
-        <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
-          Profil
-        </button>
-        <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
-          Déconnexion
+      <div v-if="!isGuest" style="display: flex; gap: 10px; flex-shrink: 0;">
+        <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Profil</button>
+        <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Déconnexion</button>
+      </div>
+      <div v-else style="display: flex; gap: 10px; flex-shrink: 0;">
+        <button @click="router.push('/register')" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
+          S'inscrire
         </button>
       </div>
     </div>
@@ -252,44 +256,58 @@ onMounted(() => { store.initApp() })
         </button>
       </div>
 
-     <!-- --- SECTION : LES 3 PROCHAINES SESSIONS (Allégée) --- -->
-      <div v-if="upcomingSessions.length > 0" style="margin-top: 30px; margin-bottom: 25px;">
-        <h3 style="color: #333; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">À venir...</h3>
+      <!-- ============================================== -->
+      <!-- ZONE VERROUILLÉE POUR LES INVITÉS (Floutage)   -->
+      <!-- ============================================== -->
+      <div style="position: relative; margin-top: 30px;">
         
-        <!-- Conteneur unique fusionné -->
-        <div style="background: #fff; border-radius: 12px; border: 1px solid #ddd; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-          <div v-for="(session, index) in upcomingSessions" :key="'up-' + session.id" 
-               :style="{ borderBottom: index < upcomingSessions.length - 1 ? '1px solid #eee' : 'none' }">
+        <div v-if="isGuest" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(128, 128, 128, 0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 10; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+          <button @click="router.push('/register')" style="padding: 15px 25px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);">
+            🔒 Créer un compte pour débloquer
+          </button>
+        </div>
+
+        <!-- Le contenu derrière le flou (clics désactivés si invité) -->
+        <div :style="{ pointerEvents: isGuest ? 'none' : 'auto', opacity: isGuest ? 0.6 : 1 }">
+          
+          <!-- SECTION : LES 3 PROCHAINES SESSIONS -->
+          <div v-if="upcomingSessions.length > 0" style="margin-bottom: 25px;">
+            <h3 style="color: #333; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">À venir...</h3>
             
-            <div @click="toggleUpcoming(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
-              <div>
-                <div style="font-weight: bold; color: #e38734; font-size: 0.9rem;">
-                  {{ session.weekTitle }} - Entraînement {{ session.sessionIndex }}
+            <div style="background: #fff; border-radius: 12px; border: 1px solid #ddd; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+              <div v-for="(session, index) in upcomingSessions" :key="'up-' + session.id" 
+                   :style="{ borderBottom: index < upcomingSessions.length - 1 ? '1px solid #eee' : 'none' }">
+                
+                <div @click="toggleUpcoming(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
+                  <div>
+                    <div style="font-weight: bold; color: #e38734; font-size: 0.9rem;">
+                      {{ session.weekTitle }} - Entraînement {{ session.sessionIndex }}
+                    </div>
+                    <div style="color: #666; font-size: 0.85rem; margin-top: 2px;">
+                      {{ session.title.split(' - ')[1] || session.title }} • {{ session.durationMin }} min
+                    </div>
+                  </div>
+                  <div style="color: #aaa; font-size: 12px; font-weight: bold;">
+                    {{ expandedUpcomingId === session.id ? '▲' : '▼' }}
+                  </div>
                 </div>
-                <div style="color: #666; font-size: 0.85rem; margin-top: 2px;">
-                  {{ session.title.split(' - ')[1] || session.title }} • {{ session.durationMin }} min
+                
+                <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 12px 15px; border-top: 1px solid #eee;">
+                  <div v-for="(exo, i) in session.exercises" :key="i" 
+                       style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #ddd; font-size: 0.85rem; color: #555;">
+                    <span style="text-transform: capitalize;">{{ exo.type }}</span>
+                    <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
+                  </div>
                 </div>
-              </div>
-              <div style="color: #aaa; font-size: 12px; font-weight: bold;">
-                {{ expandedUpcomingId === session.id ? '▲' : '▼' }}
-              </div>
-            </div>
-            
-            <!-- Détails internes -->
-            <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 12px 15px; border-top: 1px solid #eee;">
-              <div v-for="(exo, i) in session.exercises" :key="i" 
-                   style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #ddd; font-size: 0.85rem; color: #555;">
-                <span style="text-transform: capitalize;">{{ exo.type }}</span>
-                <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
               </div>
             </div>
           </div>
+
+          <!-- Historique des sessions terminées -->
+          <SessionHistory />
+
         </div>
       </div>
-
-      <!-- Historique des sessions terminées -->
-      <SessionHistory />
-
     </div>
     
     <!-- La boîte à outils -->
