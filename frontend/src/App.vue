@@ -27,30 +27,55 @@ watch(() => store.userProfile?.theme, updateTheme)
 </template>
 
 <style>
-body { transition: background 0.3s, color 0.3s; margin: 0; }
+/* Style global de base */
+body { transition: background 0.3s, color 0.3s; margin: 0; background-color: #f9f9f9; }
 
+/* --- MODE SOMBRE --- */
 body.dark-mode {
   background-color: #121212 !important;
-  color: #f5f5f5 !important;
+  color: #e0e0e0 !important;
 }
 
-/* Force les textes à être blancs au lieu de gris illisible */
+/* 1. Assombrir les encadrés blancs/gris de toutes les pages */
+body.dark-mode div[style*="background: white"],
+body.dark-mode div[style*="background: #fff"],
+body.dark-mode div[style*="background: #ffffff"],
+body.dark-mode div[style*="background: #f4f4f4"] {
+  background-color: #1e1e1e !important;
+  border: 1px solid #333 !important;
+  box-shadow: none !important;
+}
+
+/* 2. Empêcher les textes de disparaître sur fond clair */
 body.dark-mode p, body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, 
-body.dark-mode label, body.dark-mode span, body.dark-mode div {
-  color: #f5f5f5 !important;
+body.dark-mode label, body.dark-mode span {
+  color: #e0e0e0 !important;
 }
 
+/* 3. Intégrer le logo en douceur */
+body.dark-mode header img {
+  background-color: #e0e0e0;
+  padding: 10px;
+  border-radius: 15px;
+  opacity: 0.85; /* Réduit l'éblouissement */
+}
+
+/* 4. Adapter les formulaires */
 body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
   background: #2c2c2c !important;
   color: #ffffff !important;
   border: 1px solid #444 !important;
 }
 
-/* Assombrit les encadrés blancs du mode jour */
-body.dark-mode div[style*="background: #f4f4f4"],
-body.dark-mode div[style*="background: white"],
-body.dark-mode div[style*="background: #ffffff"] {
-  background: #1e1e1e !important;
-  border-color: #333 !important;
+/* 5. Adapter les boutons secondaires (Profil, Reset) */
+body.dark-mode button[style*="background: #e0e0e0"],
+body.dark-mode button[style*="background: #f0f0f0"] {
+  background-color: #333 !important;
+  color: #fff !important;
+}
+body.dark-mode button[style*="background: #ffebee"] {
+  background-color: #3a1c1c !important;
+  color: #ff8a80 !important;
+  border: 1px solid #ff8a80 !important;
 }
 </style>
