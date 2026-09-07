@@ -16,7 +16,7 @@ try {
     $stmtHistory->execute([$user['id']]);
     $history = $stmtHistory->fetchAll();
 
-    $stmtProfile = $pdo->prepare("SELECT first_name, theme, audio_enabled, avatar FROM AD_users WHERE id = ?");
+    $stmtProfile = $pdo->prepare("SELECT first_name, theme, audio_enabled, avatar, role FROM AD_users WHERE id = ?");
     $stmtProfile->execute([$user['id']]);
     $profile = $stmtProfile->fetch();
 

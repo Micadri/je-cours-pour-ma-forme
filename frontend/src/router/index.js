@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RunView from '../views/Runview.vue'
 import LoginView from '../views/LoginView.vue'
+import AdminView from '../views/AdminView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,7 +13,8 @@ const router = createRouter({
     { path: '/tips', name: 'tips', component: () => import('../views/TipsView.vue'), meta: { requiresAuth: true } },
     { path: '/welcome', name: 'welcome', component: () => import('../views/OnboardingView.vue') },
     { path: '/login', name: 'login', component: LoginView },
-    { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') }
+    { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
+    { path: '/admin', name: 'admin', component: AdminView, meta: { requiresAuth: true } }
   ]
 })
 
