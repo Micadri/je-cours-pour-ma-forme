@@ -11,25 +11,23 @@ const runners = ref([])
 const errorMessage = ref('')
 const isLoading = ref(true)
 
-// États pour les feedbacks
 const feedbacks = ref([])
 const isFeedbacksLoading = ref(true)
 
 const API_BASE = 'https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api'
 
-// États pour la modale d'historique
 const selectedRunner = ref(null)
 const runnerHistory = ref([])
 const isHistoryLoading = ref(false)
 
-// États pour le Générateur de Programme
+// CRUD Saisons
+const allSeasons = ref([])
 const newSeasonTitle = ref('Saison 2 - Objectif 10 km')
 const newSeasonWeeks = ref(12)
 const newSeasonSessions = ref(3)
 const isGenerating = ref(false)
 const generateMessage = ref('')
 
-// Filtres
 const filterSeason = ref('')
 const filterWeek = ref('')
 const filterSession = ref('')
@@ -39,7 +37,6 @@ const handleLogout = () => {
   router.push('/welcome')
 }
 
-// Formatage de la date
 const formatDate = (dateString) => {
   if (!dateString) return 'Date inconnue'
   const safeDate = dateString.replace(' ', 'T')
@@ -81,7 +78,7 @@ const fetchFeedbacks = async () => {
       feedbacks.value = data.data
     }
   } catch (e) {
-    console.error("Erreur chargement feedbacks", e)
+    console.error("Erreur", e)
   } finally {
     isFeedbacksLoading.value = false
   }
@@ -97,11 +94,104 @@ const deleteFeedback = async (id) => {
     const data = await res.json()
     if (data.status === 'success') {
       feedbacks.value = feedbacks.value.filter(fb => fb.id !== id)
-    } else {
-      alert("Erreur lors de la suppression.")
     }
   } catch (e) {
     alert("Erreur réseau.")
+  }
+}
+
+const fetchAllSeasons = async () => {
+  const token = localStorage.getItem('auth_token')
+  try {
+    const res = await fetch(`${API_BASE}/admin/users.php?action=get_all_seasons`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (data.status === 'success') {
+      allSeasons.value = data.data
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const editSeason = async (season) => {
+  const newTitle = prompt("Nouveau nom pour la saison :", season.title)
+  if (!newTitle || newTitle === season.title) return
+  
+  const token = localStorage.getItem('auth_token')
+  try {
+    const res = await fetch(`${API_BASE}/admin/users.php?action=update_season`, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ id: season.id, title: newTitle })
+    })
+    const data = await res.json()
+    if (data.status === 'success') {
+      season.title = newTitle
+      await store.initApp() // Mise à jour globale
+    } else {
+      alert("Erreur: " + data.message)
+    }
+  } catch (e) {
+    alert("Erreur réseau")
+  }
+}
+
+const deleteSeason = async (id) => {
+  if (!confirm("⚠️ ATTENTION : Cela va supprimer définitivement toute la saison, y compris les semaines et entraînements associés. Continuer ?")) return
+  
+  const token = localStorage.getItem('auth_token')
+  try {
+    const res = await fetch(`${API_BASE}/admin/users.php?action=delete_season&id=${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (data.status === 'success') {
+      allSeasons.value = allSeasons.value.filter(s => s.id !== id)
+      await store.initApp() // Mise à jour globale
+    } else {
+      alert("Erreur lors de la suppression")
+    }
+  } catch (e) {
+    alert("Erreur réseau")
+  }
+}
+
+const generateProgram = async () => {
+  if (!confirm(`Générer ${newSeasonWeeks.value * newSeasonSessions.value} entraînements procéduraux ?`)) return
+  isGenerating.value = true
+  generateMessage.value = ''
+  
+  const token = localStorage.getItem('auth_token')
+  try {
+    const res = await fetch(`${API_BASE}/admin/users.php?action=generate_season`, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({
+        title: newSeasonTitle.value,
+        weeks: newSeasonWeeks.value,
+        sessionsPerWeek: newSeasonSessions.value
+      })
+    })
+    const data = await res.json()
+    if (data.status === 'success') {
+      generateMessage.value = "✅ Programme généré avec succès en base de données !"
+      await store.initApp()
+      await fetchAllSeasons() // Rafraîchit la liste en direct
+    } else {
+      generateMessage.value = "❌ Erreur : " + data.message
+    }
+  } catch (e) {
+    generateMessage.value = "❌ Erreur réseau."
+  } finally {
+    isGenerating.value = false
   }
 }
 
@@ -160,8 +250,7 @@ const exportData = async (format) => {
     const res = await fetch(`${API_BASE}/admin/users.php?action=export&format=${format}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    if (!res.ok) throw new Error("Erreur lors de l'export")
-    
+    if (!res.ok) throw new Error("Erreur export")
     const blob = await res.blob()
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -170,48 +259,14 @@ const exportData = async (format) => {
     a.click()
     window.URL.revokeObjectURL(url)
   } catch (e) {
-    alert("Erreur lors du téléchargement.")
-  }
-}
-
-// Fonction de génération du programme procédural
-const generateProgram = async () => {
-  if (!confirm(`Générer ${newSeasonWeeks.value * newSeasonSessions.value} entraînements procéduraux ?`)) return
-  isGenerating.value = true
-  generateMessage.value = ''
-  
-  const token = localStorage.getItem('auth_token')
-  try {
-    const res = await fetch(`${API_BASE}/admin/users.php?action=generate_season`, {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' 
-      },
-      body: JSON.stringify({
-        title: newSeasonTitle.value,
-        weeks: newSeasonWeeks.value,
-        sessionsPerWeek: newSeasonSessions.value
-      })
-    })
-    const data = await res.json()
-    if (data.status === 'success') {
-      generateMessage.value = "✅ Programme généré avec succès en base de données !"
-      // Force le store à se resynchroniser pour télécharger le nouveau programme
-      await store.initApp()
-    } else {
-      generateMessage.value = "❌ Erreur : " + data.message
-    }
-  } catch (e) {
-    generateMessage.value = "❌ Erreur réseau lors de la génération."
-  } finally {
-    isGenerating.value = false
+    alert("Erreur téléchargement.")
   }
 }
 
 onMounted(() => { 
   fetchRunners()
   fetchFeedbacks()
+  fetchAllSeasons()
 })
 </script>
 
@@ -260,7 +315,7 @@ onMounted(() => {
               <th style="padding: 15px; border-bottom: 2px solid #ddd;">Nom</th>
               <th style="padding: 15px; border-bottom: 2px solid #ddd;">Email</th>
               <th style="padding: 15px; border-bottom: 2px solid #ddd;">Inscription</th>
-              <th style="padding: 15px; border-bottom: 2px solid #ddd;">Position (Saison / Semaine / Entraînement)</th>
+              <th style="padding: 15px; border-bottom: 2px solid #ddd;">Position (S. / Sem. / Entr.)</th>
               <th style="padding: 15px; border-bottom: 2px solid #ddd;">Km Parcourus</th>
             </tr>
           </thead>
@@ -306,31 +361,26 @@ onMounted(() => {
               <h3 style="margin: 0 0 5px 0; color: #333;">
                 {{ fb.subject === 'bug' ? '🐛 Bug rapporté' : fb.subject === 'idea' ? '💡 Idée proposée' : '✉️ Autre message' }}
               </h3>
-              <div style="font-size: 0.85rem; color: #666;">
-                De <strong>{{ fb.first_name || 'Inconnu' }}</strong> ({{ fb.email }})
-              </div>
+              <div style="font-size: 0.85rem; color: #666;">De <strong>{{ fb.first_name || 'Inconnu' }}</strong> ({{ fb.email }})</div>
             </div>
             
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-              <div style="font-size: 0.8rem; color: #aaa; text-align: right;">
-                {{ formatDate(fb.created_at) }}
-              </div>
-              <button @click="deleteFeedback(fb.id)" style="background: #ffebee; border: 1px solid #ffcdd2; color: #f44336; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: background 0.2s;">
+              <div style="font-size: 0.8rem; color: #aaa; text-align: right;">{{ formatDate(fb.created_at) }}</div>
+              <button @click="deleteFeedback(fb.id)" style="background: #ffebee; border: 1px solid #ffcdd2; color: #f44336; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
                 Supprimer
               </button>
             </div>
           </div>
-          <p style="margin: 0; color: #444; line-height: 1.5; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; white-space: pre-wrap;">
-            {{ fb.message }}
-          </p>
+          <p style="margin: 0; color: #444; line-height: 1.5; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; white-space: pre-wrap;">{{ fb.message }}</p>
         </div>
       </div>
     </div>
 
     <!-- TAB : PROGRAMME CRUD -->
     <div v-if="activeTab === 'program'">
-      <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-        
+      
+      <!-- Générateur -->
+      <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px;">
         <div style="text-align: center; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 25px;">
           <h2 style="color: #4CAF50; margin-top: 0; margin-bottom: 10px;">Générateur de Programme</h2>
           <p style="color: #666; font-size: 0.95rem; margin: 0;">Générez automatiquement une nouvelle saison crescendo (Échauffement + Course/Marche + Étirements).</p>
@@ -356,12 +406,36 @@ onMounted(() => {
             {{ isGenerating ? 'Génération en cours...' : '⚡ Générer la Saison' }}
           </button>
 
-          <p v-if="generateMessage" style="text-align: center; font-weight: bold; margin-top: 10px;" :style="{ color: generateMessage.includes('❌') ? '#d32f2f' : '#4CAF50' }">
-            {{ generateMessage }}
-          </p>
+          <p v-if="generateMessage" style="text-align: center; font-weight: bold; margin-top: 10px;" :style="{ color: generateMessage.includes('❌') ? '#d32f2f' : '#4CAF50' }">{{ generateMessage }}</p>
+        </div>
+      </div>
+
+      <!-- Liste des Saisons pour Édition -->
+      <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        <h2 style="color: #4CAF50; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">Saisons Existantes</h2>
+        
+        <div v-if="allSeasons.length === 0" style="text-align: center; color: #888; padding: 20px;">
+          Aucune saison pour le moment.
         </div>
 
+        <div v-else style="display: flex; flex-direction: column; gap: 10px;">
+          <div v-for="season in allSeasons" :key="season.id" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fafafa; border: 1px solid #eee; border-radius: 8px;">
+            <div>
+              <strong style="font-size: 1.1rem; color: #333;">{{ season.title }}</strong>
+              <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">{{ season.weeks_count }} semaines</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button @click="editSeason(season)" style="padding: 6px 12px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                ✏️ Éditer
+              </button>
+              <button @click="deleteSeason(season.id)" style="padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                🗑️ Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+
     </div>
 
     <!-- MODALE HISTORIQUE D'UN COUREUR -->

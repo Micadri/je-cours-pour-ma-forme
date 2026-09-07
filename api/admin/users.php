@@ -84,7 +84,6 @@ try {
         echo json_encode(["status" => "success"]);
         
     } elseif ($action === 'generate_season') {
-        // NOUVELLE ROUTE : Générateur Algorithmique
         $data = json_decode(file_get_contents("php://input"), true);
         $title = $data['title'] ?? 'Nouvelle Saison';
         $weeks = (int)($data['weeks'] ?? 12);
@@ -97,7 +96,6 @@ try {
 
         $pdo->beginTransaction();
 
-        // 1. Créer la Saison
         $stmtOrder = $pdo->query("SELECT MAX(order_num) FROM AD_seasons");
         $season_order = ((int)$stmtOrder->fetchColumn()) + 1;
 
@@ -112,30 +110,22 @@ try {
         $stmtSession = $pdo->prepare("INSERT INTO AD_sessions (week_id, title, order_num) VALUES (?, ?, ?)");
         $stmtExo = $pdo->prepare("INSERT INTO AD_exercises (session_id, type, duration_seconds, order_num) VALUES (?, ?, ?, ?)");
 
-        // 2. Boucle des Semaines
         for ($w = 1; $w <= $weeks; $w++) {
             $stmtWeek->execute([$season_id, "Semaine $w", $w]);
             $week_id = $pdo->lastInsertId();
 
-            // 3. Boucle des Entraînements (Sessions)
             for ($s = 1; $s <= $sessionsPerWeek; $s++) {
                 $session_title = "Semaine $w - Entraînement $s";
                 $stmtSession->execute([$week_id, $session_title, $s]);
                 $session_id = $pdo->lastInsertId();
 
                 $exo_order = 1;
-                
-                // --- A. TOUJOURS : Échauffement (5 min) ---
                 $stmtExo->execute([$session_id, 'echauffement', 300, $exo_order++]);
 
-                // --- B. CRESCENDO ALGORYTHMIQUE ---
-                $progressFactor = ($globalSession - 1) / max(1, ($totalSessions - 1)); // Va de 0.0 à 1.0
+                $progressFactor = ($globalSession - 1) / max(1, ($totalSessions - 1));
                 
-                // La durée de course augmente (de 1 min à 30 min)
                 $runTime = round(60 + ($progressFactor * 1740)); 
-                // La durée de marche diminue (de 2 min à 0 min)
                 $walkTime = round(120 - ($progressFactor * 120)); 
-                // La durée totale du corps de la séance augmente (de 15 min à 40 min)
                 $coreTargetTime = (15 * 60) + round($progressFactor * 25 * 60); 
                 
                 $accumulated = 0;
@@ -149,14 +139,48 @@ try {
                     }
                 }
 
-                // --- C. TOUJOURS : Étirements (5 min) ---
                 $stmtExo->execute([$session_id, 'etirements', 300, $exo_order++]);
-
                 $globalSession++;
             }
         }
         $pdo->commit();
         echo json_encode(["status" => "success", "message" => "Saison générée avec succès !"]);
+
+    } elseif ($action === 'get_all_seasons') {
+        // NOUVELLE ROUTE : Lister toutes les saisons pour le CRUD
+        $stmt = $pdo->query("SELECT * FROM AD_seasons ORDER BY order_num ASC");
+        $seasons = $stmt->fetchAll();
+        foreach ($seasons as &$s) {
+            $stmtW = $pdo->prepare("SELECT COUNT(*) FROM AD_weeks WHERE season_id = ?");
+            $stmtW->execute([$s['id']]);
+            $s['weeks_count'] = $stmtW->fetchColumn();
+        }
+        echo json_encode(["status" => "success", "data" => $seasons]);
+
+    } elseif ($action === 'update_season') {
+        // NOUVELLE ROUTE : Éditer le nom d'une saison
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = $data['id'] ?? 0;
+        $title = trim($data['title'] ?? '');
+        if ($id && $title) {
+            $stmt = $pdo->prepare("UPDATE AD_seasons SET title = ? WHERE id = ?");
+            $stmt->execute([$title, $id]);
+            echo json_encode(["status" => "success"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Données invalides"]);
+        }
+
+    } elseif ($action === 'delete_season') {
+        // NOUVELLE ROUTE : Supprimer intégralement une saison
+        $id = $_GET['id'] ?? 0;
+        $pdo->beginTransaction();
+        // Suppression en cascade inversée pour protéger les contraintes de clés étrangères
+        $pdo->prepare("DELETE FROM AD_exercises WHERE session_id IN (SELECT id FROM AD_sessions WHERE week_id IN (SELECT id FROM AD_weeks WHERE season_id = ?))")->execute([$id]);
+        $pdo->prepare("DELETE FROM AD_sessions WHERE week_id IN (SELECT id FROM AD_weeks WHERE season_id = ?)")->execute([$id]);
+        $pdo->prepare("DELETE FROM AD_weeks WHERE season_id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM AD_seasons WHERE id = ?")->execute([$id]);
+        $pdo->commit();
+        echo json_encode(["status" => "success"]);
     }
 } catch (Exception $e) {
     if ($pdo->inTransaction()) { $pdo->rollBack(); }
