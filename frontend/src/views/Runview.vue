@@ -8,6 +8,7 @@ import TimerDisplay from '../components/TimerDisplay.vue'
 const router = useRouter()
 const store = useProgramStore()
 
+const isGuest = computed(() => !localStorage.getItem('auth_token'))
 const isDataReady = computed(() => store.seasonData !== null && store.currentProgress !== null)
 const currentSession = computed(() => store.currentSessionDetails?.session || null)
 const exercises = computed(() => currentSession.value?.exercises || [])
@@ -147,13 +148,23 @@ const shareSession = async () => {
            <p><strong>Pas :</strong> {{ finalStats.steps }}</p>
          </div>
 
-         <button @click="shareSession" style="width: 100%; padding: 15px; background: #1DA1F2; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px;">
-           🚀 Partager mon exploit
-         </button>
+       <div v-if="!isGuest">
+            <button @click="shareSession" style="width: 100%; padding: 15px; background: #1DA1F2; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px;">
+                Partager mon exploit
+            </button>
+            <button @click="closeAndSave" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">
+              Valider et Quitter
+            </button>
+          </div>
 
-         <button @click="closeAndSave" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">
-           Valider et Quitter
-         </button>
+          <div v-else>
+            <p style="text-align: center; color: #555; font-size: 0.9rem; margin-bottom: 15px; font-style: italic;">
+              Créez un compte gratuit pour sauvegarder cette course et débloquer la suite du programme !
+            </p>
+            <button @click="closeAndSave" style="width: 100%; padding: 15px; background: #e38734; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(227, 135, 52, 0.3);">
+              S'inscrire maintenant
+            </button>
+            </div>
       </div>
     </div>
 

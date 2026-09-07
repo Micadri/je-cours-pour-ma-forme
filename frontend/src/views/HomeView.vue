@@ -212,9 +212,22 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
           </div>
         </div>
 
-        <button @click="startSession" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px;">
-          Démarrer la session
-        </button>
+      <!-- Bouton de lancement conditionnel -->
+      <button 
+        v-if="!isGuest || store.completedSessions.length === 0"
+        @click="startSession" 
+        style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px;"
+      >
+        Démarrer la session
+      </button>
+      
+      <button 
+        v-else
+        @click="router.push('/register')" 
+        style="width: 100%; padding: 15px; background: #e38734; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(227, 135, 52, 0.3);"
+      >
+        🔒 S'inscrire pour continuer
+      </button>
 
         <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: stretch; height: 40px;">
           <button v-if="!showWeekSelector" @click="openWeekSelector" :disabled="availableWeeks.length === 0" :style="{ flex: 1, background: availableWeeks.length === 0 ? '#f0f0f0' : '#e0e0e0', border: 'none', borderRadius: '5px', cursor: availableWeeks.length === 0 ? 'not-allowed' : 'pointer', color: availableWeeks.length === 0 ? '#aaa' : '#333', fontWeight: 'bold' }">Reset Semaine</button>
