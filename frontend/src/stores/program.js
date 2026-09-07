@@ -99,30 +99,42 @@ async function initApp() {
       if (token) {
         const progressRes = await fetch(`${API_BASE}/runner/progress.php?token=${token}`)
         const progressJson = await progressRes.json()
+        
         if (progressJson.status === 'success') {
           currentProgress.value = progressJson.data.progress
           sessionHistory.value = progressJson.data.history || []
           userProfile.value = progressJson.data.profile || null
+          
+          // Sécurité : si l'audio n'est pas défini depuis la DB, on l'active par défaut
+          if (userProfile.value && userProfile.value.audio_enabled === undefined) {
+            userProfile.value.audio_enabled = 1
+          }
+          
           localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
           localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
+          if (userProfile.value) localStorage.setItem('pwa_profile', JSON.stringify(userProfile.value))
         }
       } else {
         // Mode Invité : Chargement local
         currentProgress.value = JSON.parse(localStorage.getItem('pwa_progress')) || { current_week_id: 1, current_session_id: 1 }
         sessionHistory.value = JSON.parse(localStorage.getItem('pwa_history')) || []
-        userProfile.value = { first_name: 'Coureur', theme: 'light' }
+        
+        // On charge le profil invité s'il existe, sinon on crée le défaut avec le son activé
+        const localProfile = JSON.parse(localStorage.getItem('pwa_profile'))
+        userProfile.value = localProfile || { first_name: 'Coureur', theme: 'light', audio_enabled: 1 }
+        if (userProfile.value.audio_enabled === undefined) userProfile.value.audio_enabled = 1
       }
 
-      // 2. Récupération du programme (sans token !)
-      const programRes = await fetch(`${API_BASE}/program/full.php`)
+      // 2. Récupération du programme
+      const programUrl = token ? `${API_BASE}/program/full.php?token=${token}` : `${API_BASE}/program/full.php`
+      const programRes = await fetch(programUrl)
       const programJson = await programRes.json()
+      
       if (programJson.status === 'success') {
         seasonData.value = programJson.data
         localStorage.setItem('pwa_cache_program', JSON.stringify(seasonData.value))
       }
-
     } catch (e) {
-      // En cas d'erreur réseau, on bascule proprement sur le cache local
       console.error("Erreur réseau dans initApp :", e)
       console.warn("Mode Hors-ligne activé. Chargement du cache.")
       
@@ -136,7 +148,8 @@ async function initApp() {
       sessionHistory.value = savedHistory ? JSON.parse(savedHistory) : []
       
       const savedProfile = localStorage.getItem('pwa_profile')
-      if (savedProfile) userProfile.value = JSON.parse(savedProfile)
+      userProfile.value = savedProfile ? JSON.parse(savedProfile) : { first_name: 'Coureur', theme: 'light', audio_enabled: 1 }
+      if (userProfile.value.audio_enabled === undefined) userProfile.value.audio_enabled = 1
     }
   }
 async function updateProfile(newProfileData) {
