@@ -12,8 +12,10 @@ if (!$subject || !$message) {
 }
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO feedbacks (user_id, subject, message) VALUES (?, ?, ?)");
+    // Correction : ajout du préfixe AD_ à la table
+    $stmt = $pdo->prepare("INSERT INTO AD_feedbacks (user_id, subject, message) VALUES (?, ?, ?)");
     $stmt->execute([$user['id'], $subject, $message]);
+    
     echo json_encode(["status" => "success", "message" => "Merci pour votre retour !"]);
 } catch (Exception $e) {
     echo json_encode(["status" => "error", "message" => $e->getMessage()]);
