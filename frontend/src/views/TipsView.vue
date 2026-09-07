@@ -3,15 +3,42 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const tools = [
-  { id: 'echauffement', title: 'Échauffement', desc: 'Préparer la machine avant l\'effort', icon: '🔥' },
-  { id: 'posture', title: 'Posture de course', desc: 'Courir grand et détendu', icon: '🏃' },
-  { id: 'hydratation', title: 'Hydratation', desc: 'L\'eau, votre carburant essentiel', icon: '💧' },
-  { id: 'recuperation', title: 'Récupération', desc: 'S\'étirer et redescendre en douceur', icon: '🧘' }
+  { 
+    id: 'echauffement', 
+    title: 'Échauffement', 
+    desc: 'Préparer la machine avant l\'effort', 
+    icon: '🔥',
+    link: 'https://www.asics.com/fr/fr-fr/running-advice/how-to-warm-up-before-running/' // <-- Insère ton lien ici
+  },
+  { 
+    id: 'posture', 
+    title: 'Posture de course', 
+    desc: 'Courir grand et détendu', 
+    icon: '🏃',
+    link: 'https://www.decathlon.be/fr/c/exe/comment-adopter-une-bonne-posture-pour-la-course-a-pied_79246bd1-84a6-47d2-92d1-3eba75b15e5a' // <-- Insère ton lien ici
+  },
+  { 
+    id: 'hydratation', 
+    title: 'Hydratation', 
+    desc: 'L\'eau, votre carburant essentiel', 
+    icon: '💧',
+    link: 'https://www.nutripure.fr/fr/blog/hydratation-et-sante-n654' // <-- Insère ton lien ici
+  },
+  { 
+    id: 'recuperation', 
+    title: 'Récupération', 
+    desc: 'S\'étirer et redescendre en douceur', 
+    icon: '🧘',
+    link: 'https://www.decathlon.be/fr/c/well/running-comment-bien-recuperer-apres-votre-course_875fc080-86b7-4c12-803d-32c0b2abae31' // <-- Insère ton lien ici
+  }
 ]
 
-const openTip = (id) => {
-  // Tu pourras remplacer cette alerte par un router.push(`/tips/${id}`) plus tard
-  alert(`La page détaillée pour "${id}" sera bientôt disponible !`)
+const openTip = (link) => {
+  if (link && link.startsWith('http')) {
+    window.open(link, '_blank')
+  } else {
+    alert("Cet article sera bientôt disponible !")
+  }
 }
 </script>
 
@@ -24,7 +51,7 @@ const openTip = (id) => {
     <h1 style="margin-top: 0; margin-bottom: 25px;">La Boîte à outils</h1>
 
     <div style="display: flex; flex-direction: column; gap: 15px;">
-      <div v-for="tool in tools" :key="tool.id" @click="openTip(tool.id)"
+      <div v-for="tool in tools" :key="tool.id" @click="openTip(tool.link)"
            style="background: #ffffff; border: 1px solid #eee; border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
         <div style="display: flex; align-items: center; gap: 15px;">
           <div style="font-size: 28px;">{{ tool.icon }}</div>

@@ -52,21 +52,24 @@ onMounted(() => { store.initApp() })
   <main style="padding: 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
     <h1 style="text-align: center;">Vue d'ensemble</h1>
     
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-  <div style="display: flex; align-items: center; gap: 15px;">
-    <div style="width: 50px; height: 50px; border-radius: 50%; background: #ccc; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 25px; padding: 15px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+  <!-- Avatar + Nom -->
+  <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 200px;">
+    <div style="width: 50px; height: 50px; border-radius: 50%; background: #ccc; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
       <img v-if="store.userProfile?.avatar" :src="store.userProfile.avatar" style="width: 100%; height: 100%; object-fit: cover;" />
-      <span v-else style="color: white; font-size: 20px;">🏃</span>
+      <span v-else style="color: white; font-size: 20px;">👤</span>
     </div>
-    <h2 style="margin: 0; font-size: 1.2rem; color: #333;">
-      Bonjour, {{ store.userProfile?.first_name || 'Coureur' }} !
+    <h2 style="margin: 0; font-size: 1.2rem; color: #333; line-height: 1.2;">
+      Bonjour, <br/><span style="color: #4CAF50;">{{ store.userProfile?.first_name || 'Coureur' }}</span> !
     </h2>
   </div>
-  <div>
-    <button @click="router.push('/profile')" style="padding: 8px 12px; background: #e0e0e0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin-right: 10px;">
+  
+  <!-- Boutons -->
+  <div style="display: flex; gap: 10px; flex-shrink: 0;">
+    <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
       Profil
     </button>
-    <button @click="handleLogout" style="padding: 8px 12px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 5px; cursor: pointer; font-size: 14px;">
+    <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
       Déconnexion
     </button>
   </div>
