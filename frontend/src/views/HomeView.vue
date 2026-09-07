@@ -167,29 +167,29 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
         </div>
       </div>
 
- <!-- Carte de la prochaine session (Style JCPMF Amélioré) -->
+<!-- Carte de la prochaine session (Style JCPMF Amélioré) -->
       <div v-if="store.currentSessionDetails" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee;">
         
-        <!-- En-tête Gris : Semaine (sur X) -->
-        <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.15rem; display: flex; justify-content: space-between; align-items: center;">
+        <!-- En-tête Gris : Uniquement la Semaine centrée -->
+        <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.15rem; text-align: center;">
           <span style="color: white !important;">
             {{ store.currentSessionDetails.week.title }} (sur {{ store.seasonData.weeks.length }})
           </span>
-          <span style="font-size: 0.75rem; opacity: 0.95; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; color: white !important;">
-            PROCHAINE COURSE
-          </span>
         </div>
         
-        <!-- Sous-titre Orange INTERACTIF : Jour et Durée -->
+        <!-- Sous-titre Orange INTERACTIF : Prochaine course et Session -->
         <div @click="showPreview = !showPreview" style="background: #e38734; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.2);">
           <div>
-            <div style="font-weight: bold; font-size: 1.2rem; color: white !important;">
-              Entraînement {{ nextSessionIndex }}
+            <!-- Nouveau badge Prochaine course -->
+            <div style="font-size: 0.75rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; color: white !important; margin-bottom: 3px;">
+              Prochaine course
             </div>
-            <div style="font-size: 0.9rem; opacity: 0.95; color: white !important; margin-top: 2px;">
-              ({{ store.currentSessionDetails.session.title.split(' - ')[1] || store.currentSessionDetails.session.title }})
+            <!-- Titre dynamique "1ère / 2ème session" -->
+            <div style="font-weight: bold; font-size: 1.1rem; color: white !important;">
+              {{ nextSessionIndex === 1 ? '1ère' : nextSessionIndex + 'ème' }} session de la semaine
             </div>
           </div>
+          
           <div style="text-align: right;">
             <div style="font-weight: bold; font-size: 1.3rem; color: white !important;">
               {{ nextSessionDuration }} min
@@ -209,16 +209,21 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
            </div>
         </div>
         
-        <!-- Statistiques cumulées globales clarifiées -->
-        <div style="padding: 20px 15px; display: flex; justify-content: space-around; background: #fff;">
-          <div style="text-align: center; width: 45%;">
-            <div style="font-size: 1.6rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
-            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: bold;">Distance Cumulée</div>
+        <!-- Statistiques cumulées avec Titre -->
+        <div style="padding: 15px; background: #fff;">
+          <div style="text-align: center; color: #666; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">
+            Statistiques de la saison
           </div>
-          <div style="width: 1px; background: #eee;"></div>
-          <div style="text-align: center; width: 45%;">
-            <div style="font-size: 1.6rem; color: #4CAF50; font-weight: bold;">{{ totalSteps }}</div>
-            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: bold;">Pas Cumulés</div>
+          <div style="display: flex; justify-content: space-around;">
+            <div style="text-align: center; width: 45%;">
+              <div style="font-size: 1.6rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
+              <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: bold;">Distance Cumulée</div>
+            </div>
+            <div style="width: 1px; background: #eee;"></div>
+            <div style="text-align: center; width: 45%;">
+              <div style="font-size: 1.6rem; color: #4CAF50; font-weight: bold;">{{ totalSteps }}</div>
+              <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: bold;">Pas Cumulés</div>
+            </div>
           </div>
         </div>
       </div>
