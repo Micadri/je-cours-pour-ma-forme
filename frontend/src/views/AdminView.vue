@@ -11,6 +11,10 @@ const runners = ref([])
 const errorMessage = ref('')
 const isLoading = ref(true)
 
+// Nouveaux états pour les feedbacks
+const feedbacks = ref([])
+const isFeedbacksLoading = ref(true)
+
 const API_BASE = 'https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api'
 
 // États pour la modale d'historique
@@ -28,7 +32,7 @@ const handleLogout = () => {
   router.push('/welcome')
 }
 
-// Fonction de formatage robuste pour les dates SQL (règle le bug Safari/iOS)
+// Fonction de formatage robuste pour les dates SQL
 const formatDate = (dateString) => {
   if (!dateString) return 'Date inconnue'
   const safeDate = dateString.replace(' ', 'T')
@@ -55,6 +59,24 @@ const fetchRunners = async () => {
     errorMessage.value = "Erreur réseau."
   } finally {
     isLoading.value = false
+  }
+}
+
+// Nouvelle fonction pour charger les feedbacks
+const fetchFeedbacks = async () => {
+  const token = localStorage.getItem('auth_token')
+  try {
+    const res = await fetch(`${API_BASE}/admin/users.php?action=feedbacks`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (data.status === 'success') {
+      feedbacks.value = data.data
+    }
+  } catch (e) {
+    console.error("Erreur chargement feedbacks", e)
+  } finally {
+    isFeedbacksLoading.value = false
   }
 }
 
@@ -86,7 +108,6 @@ const closeHistory = () => {
   selectedRunner.value = null
 }
 
-// Logique des listes déroulantes de filtrage
 const availableSeasons = computed(() => [...new Set(runnerHistory.value.map(h => h.season_title))])
 const availableWeeks = computed(() => {
   return [...new Set(runnerHistory.value
@@ -100,7 +121,6 @@ const availableSessions = computed(() => {
     .map(h => h.session_index))].sort((a, b) => a - b)
 })
 
-// Application des filtres sur le tableau
 const filteredHistory = computed(() => {
   return runnerHistory.value.filter(log => {
     return (!filterSeason.value || log.season_title === filterSeason.value) &&
@@ -129,7 +149,10 @@ const exportData = async (format) => {
   }
 }
 
-onMounted(() => { fetchRunners() })
+onMounted(() => { 
+  fetchRunners()
+  fetchFeedbacks() // On charge les retours en même temps
+})
 </script>
 
 <template>
@@ -146,9 +169,13 @@ onMounted(() => { fetchRunners() })
       {{ errorMessage }}
     </div>
 
-    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; flex-wrap: wrap;">
       <button @click="activeTab = 'runners'" :style="{ background: activeTab === 'runners' ? '#4CAF50' : 'transparent', color: activeTab === 'runners' ? 'white' : '#666', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }">
         👥 Les Coureurs
+      </button>
+      <!-- Nouvel onglet Signalements -->
+      <button @click="activeTab = 'feedbacks'" :style="{ background: activeTab === 'feedbacks' ? '#4CAF50' : 'transparent', color: activeTab === 'feedbacks' ? 'white' : '#666', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }">
+        📬 Signalements
       </button>
       <button @click="activeTab = 'program'" :style="{ background: activeTab === 'program' ? '#4CAF50' : 'transparent', color: activeTab === 'program' ? 'white' : '#666', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }">
         📁 Gérer le Programme
@@ -197,6 +224,41 @@ onMounted(() => { fetchRunners() })
       </div>
     </div>
 
+    <!-- TAB : SIGNALEMENTS -->
+    <div v-if="activeTab === 'feedbacks'">
+      <div style="margin-bottom: 15px;">
+        <h2 style="margin: 0; color: #4CAF50;">Retours utilisateurs ({{ feedbacks.length }})</h2>
+      </div>
+
+      <div v-if="isFeedbacksLoading" style="text-align: center; padding: 40px; color: #888;">Chargement des signalements...</div>
+
+      <div v-else-if="feedbacks.length === 0" style="text-align: center; padding: 40px; color: #888; font-style: italic; background: white; border-radius: 12px;">
+        Aucun signalement pour le moment.
+      </div>
+
+      <div v-else style="display: flex; flex-direction: column; gap: 15px;">
+        <div v-for="fb in feedbacks" :key="fb.id" 
+             :style="{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderLeft: fb.subject === 'bug' ? '5px solid #f44336' : fb.subject === 'idea' ? '5px solid #2196F3' : '5px solid #9e9e9e' }">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start;">
+            <div>
+              <h3 style="margin: 0 0 5px 0; color: #333;">
+                {{ fb.subject === 'bug' ? '🐛 Bug rapporté' : fb.subject === 'idea' ? '💡 Idée proposée' : '✉️ Autre message' }}
+              </h3>
+              <div style="font-size: 0.85rem; color: #666;">
+                De <strong>{{ fb.first_name || 'Inconnu' }}</strong> ({{ fb.email }})
+              </div>
+            </div>
+            <div style="font-size: 0.8rem; color: #aaa; text-align: right;">
+              {{ formatDate(fb.created_at) }}
+            </div>
+          </div>
+          <p style="margin: 0; color: #444; line-height: 1.5; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; white-space: pre-wrap;">
+            {{ fb.message }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- MODALE HISTORIQUE D'UN COUREUR -->
     <div v-if="selectedRunner" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;">
       <div style="background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 800px; max-height: 85vh; overflow-y: auto; position: relative;">
@@ -204,7 +266,6 @@ onMounted(() => { fetchRunners() })
         
         <h2 style="margin-top: 0; color: #333;">Historique de <span style="color: #4CAF50;">{{ selectedRunner.first_name }}</span></h2>
         
-        <!-- Filtres -->
         <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
           <select v-model="filterSeason" @change="filterWeek = ''; filterSession = ''" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; flex: 1; min-width: 150px;">
             <option value="">Toutes les Saisons</option>
@@ -276,6 +337,6 @@ onMounted(() => { fetchRunners() })
   transition: background 0.2s;
 }
 .runner-row:hover {
-  background-color: #f1f8e9; /* Vert très clair au survol */
+  background-color: #f1f8e9;
 }
 </style>

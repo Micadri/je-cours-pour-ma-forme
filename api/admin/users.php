@@ -29,7 +29,6 @@ try {
     } elseif ($action === 'history') {
         $user_id = $_GET['user_id'] ?? 0;
         
-        // LEFT JOIN protège contre les sessions supprimées, on utilise completed_at en priorité
         $stmt = $pdo->prepare("
             SELECT l.*, 
                    COALESCE(s.order_num, 1) as session_index, 
@@ -69,6 +68,15 @@ try {
             foreach ($runners as $row) { fputcsv($output, $row); }
             fclose($output);
         }
+    } elseif ($action === 'feedbacks') {
+        // NOUVELLE ROUTE : Récupération des signalements
+        $stmt = $pdo->query("
+            SELECT f.*, u.first_name, u.email 
+            FROM AD_feedbacks f 
+            LEFT JOIN AD_users u ON f.user_id = u.id 
+            ORDER BY f.created_at DESC
+        ");
+        echo json_encode(["status" => "success", "data" => $stmt->fetchAll()]);
     }
 } catch (Exception $e) {
     http_response_code(500);
