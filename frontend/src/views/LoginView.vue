@@ -5,10 +5,10 @@ import { useProgramStore } from '../stores/program'
 
 const router = useRouter()
 const store = useProgramStore()
+
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
-
 
 const handleLogin = async () => {
   errorMessage.value = ''
@@ -35,17 +35,28 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <main style="display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 20px; font-family: sans-serif;">
-    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px;">
+  <main style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 20px; font-family: sans-serif;">
+    
+    <!-- Bouton Retour -->
+    <div style="width: 100%; max-width: 400px; margin-bottom: 15px;">
+      <button @click="router.push('/welcome')" style="background: none; border: none; color: #4CAF50; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">
+        ← Retour à la présentation
+      </button>
+    </div>
+
+    <!-- Carte de connexion -->
+    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box;">
       <h1 style="text-align: center; color: #333; margin-top: 0;">Connexion</h1>
       
       <p v-if="errorMessage" style="color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; font-size: 14px;">
         {{ errorMessage }}
       </p>
-<p style="text-align: center; font-size: 14px; color: #666; margin-top: 15px;">
+
+      <p style="text-align: center; font-size: 14px; color: #666; margin-top: 15px;">
           Pas encore de compte ? 
           <router-link to="/register" style="color: #4CAF50; text-decoration: none; font-weight: bold;">S'inscrire</router-link>
-        </p>
+      </p>
+
       <form @submit.prevent="handleLogin" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
         <div>
           <label style="display: block; margin-bottom: 5px; color: #555; font-weight: bold;">Email</label>

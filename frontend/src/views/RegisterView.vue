@@ -6,10 +6,10 @@ import { useProgramStore } from '../stores/program'
 const firstName = ref('')
 const router = useRouter()
 const store = useProgramStore()
+
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
-
 
 const handleRegister = async () => {
   errorMessage.value = ''
@@ -23,7 +23,6 @@ const handleRegister = async () => {
     const data = await res.json()
     
     if (data.status === 'success') {
-      // Sauvegarde du token et redirection immédiate vers le tableau de bord
       localStorage.setItem('auth_token', data.token)
       await store.initApp()
       router.push('/')
@@ -37,19 +36,29 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <main style="display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 20px; font-family: sans-serif;">
-    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px;">
+  <main style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 20px; font-family: sans-serif;">
+    
+    <!-- Bouton Retour -->
+    <div style="width: 100%; max-width: 400px; margin-bottom: 15px;">
+      <button @click="router.push('/welcome')" style="background: none; border: none; color: #4CAF50; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">
+        ← Retour à la présentation
+      </button>
+    </div>
+
+    <!-- Carte d'inscription -->
+    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box;">
       <h1 style="text-align: center; color: #333; margin-top: 0;">Inscription</h1>
       
       <p v-if="errorMessage" style="color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; font-size: 14px;">
         {{ errorMessage }}
       </p>
-<!-- Dans ton template, juste avant le champ Email -->
-<div>
-  <label style="display: block; margin-bottom: 5px; color: #555; font-weight: bold;">Prénom</label>
-  <input type="text" v-model="firstName" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;" />
-</div>
+
       <form @submit.prevent="handleRegister" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+        <div>
+          <label style="display: block; margin-bottom: 5px; color: #555; font-weight: bold;">Prénom</label>
+          <input type="text" v-model="firstName" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;" />
+        </div>
+
         <div>
           <label style="display: block; margin-bottom: 5px; color: #555; font-weight: bold;">Email</label>
           <input type="email" v-model="email" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;" />
