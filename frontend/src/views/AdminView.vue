@@ -28,6 +28,16 @@ const handleLogout = () => {
   router.push('/welcome')
 }
 
+// Fonction de formatage robuste pour les dates SQL (règle le bug Safari/iOS)
+const formatDate = (dateString) => {
+  if (!dateString) return 'Date inconnue'
+  const safeDate = dateString.replace(' ', 'T')
+  return new Date(safeDate).toLocaleDateString('fr-FR', { 
+    day: '2-digit', month: '2-digit', year: 'numeric', 
+    hour: '2-digit', minute:'2-digit' 
+  })
+}
+
 const fetchRunners = async () => {
   const token = localStorage.getItem('auth_token')
   try {
@@ -87,7 +97,7 @@ const availableSessions = computed(() => {
   return [...new Set(runnerHistory.value
     .filter(h => (!filterSeason.value || h.season_title === filterSeason.value) && 
                  (!filterWeek.value || h.week_title === filterWeek.value))
-    .map(h => h.session_title))]
+    .map(h => h.session_index))].sort((a, b) => a - b)
 })
 
 // Application des filtres sur le tableau
@@ -95,7 +105,7 @@ const filteredHistory = computed(() => {
   return runnerHistory.value.filter(log => {
     return (!filterSeason.value || log.season_title === filterSeason.value) &&
            (!filterWeek.value || log.week_title === filterWeek.value) &&
-           (!filterSession.value || log.session_title === filterSession.value)
+           (!filterSession.value || log.session_index === filterSession.value)
   })
 })
 
@@ -172,7 +182,7 @@ onMounted(() => { fetchRunners() })
             <tr v-for="runner in runners" :key="runner.id" @click="viewRunnerHistory(runner)" class="runner-row">
               <td style="padding: 15px; font-weight: bold; color: #333;">{{ runner.first_name }}</td>
               <td style="padding: 15px; color: #666;">{{ runner.email }}</td>
-              <td style="padding: 15px; color: #888; font-size: 0.9rem;">{{ new Date(runner.created_at).toLocaleDateString() }}</td>
+              <td style="padding: 15px; color: #888; font-size: 0.9rem;">{{ formatDate(runner.created_at) }}</td>
               <td style="padding: 15px;">
                 <span style="background: #e38734; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
                   {{ runner.current_season_id || 1 }} - {{ runner.current_week_id || 1 }} - {{ runner.current_session_id || 1 }}
@@ -206,7 +216,9 @@ onMounted(() => { fetchRunners() })
           </select>
           <select v-model="filterSession" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; flex: 1; min-width: 150px;">
             <option value="">Tous les Entraînements</option>
-            <option v-for="se in availableSessions" :key="se" :value="se">{{ se.split(' - ')[1] || se }}</option>
+            <option v-for="idx in availableSessions" :key="idx" :value="idx">
+              {{ idx === 1 ? '1ère' : idx + 'ème' }} session
+            </option>
           </select>
         </div>
 
@@ -229,12 +241,13 @@ onMounted(() => { fetchRunners() })
           <tbody>
             <tr v-for="(log, i) in filteredHistory" :key="i" style="border-bottom: 1px solid #eee;">
               <td style="padding: 10px; color: #666;">
-                <!-- Gestion robuste de l'affichage de la date -->
-                {{ log.created_at ? new Date(log.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' }) : 'Date inconnue' }}
+                {{ formatDate(log.completed_at || log.created_at) }}
               </td>
               <td style="padding: 10px; font-weight: bold; color: #333;">{{ log.season_title }}</td>
               <td style="padding: 10px; color: #555;">{{ log.week_title }}</td>
-              <td style="padding: 10px; color: #e38734;">{{ log.session_title.split(' - ')[1] || log.session_title }}</td>
+              <td style="padding: 10px; color: #e38734; font-weight: bold;">
+                {{ log.session_index === 1 ? '1ère' : log.session_index + 'ème' }} session
+              </td>
               <td style="padding: 10px; font-weight: bold; color: #4CAF50; text-align: right;">{{ (log.distance_meters / 1000).toFixed(2) }} km</td>
             </tr>
           </tbody>

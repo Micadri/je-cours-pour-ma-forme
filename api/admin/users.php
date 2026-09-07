@@ -29,11 +29,10 @@ try {
     } elseif ($action === 'history') {
         $user_id = $_GET['user_id'] ?? 0;
         
-        // Utilisation de l.* pour éviter de planter si created_at n'existe pas
-        // Utilisation de LEFT JOIN pour forcer l'affichage même si un entraînement a été supprimé
+        // LEFT JOIN protège contre les sessions supprimées, on utilise completed_at en priorité
         $stmt = $pdo->prepare("
             SELECT l.*, 
-                   COALESCE(s.title, 'Entraînement inconnu') as session_title, 
+                   COALESCE(s.order_num, 1) as session_index, 
                    COALESCE(w.title, 'Semaine inconnue') as week_title, 
                    COALESCE(sea.title, 'Saison inconnue') as season_title
             FROM AD_session_logs l
