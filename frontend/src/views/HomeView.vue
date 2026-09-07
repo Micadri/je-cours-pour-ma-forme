@@ -43,6 +43,7 @@ const seasonProgressPercent = computed(() => {
   if (totalSessionsInSeason.value === 0) return 0
   return Math.round((store.completedSessions.length / totalSessionsInSeason.value) * 100)
 })
+
 const totalDistance = computed(() => {
   const sum = store.completedSessions.reduce((acc, session) => acc + (parseFloat(session.distance) || 0), 0)
   return sum.toFixed(2)
@@ -51,6 +52,33 @@ const totalDistance = computed(() => {
 const totalSteps = computed(() => {
   return store.completedSessions.reduce((acc, session) => acc + (parseInt(session.steps) || 0), 0)
 })
+
+// Variable pour ouvrir/fermer la preview
+const showPreview = ref(false)
+
+// Calcul du numéro de l'entraînement dans la semaine (1, 2 ou 3)
+const nextSessionIndex = computed(() => {
+  if (!store.currentSessionDetails) return 1
+  const weekSessions = store.currentSessionDetails.week.sessions
+  const currentId = store.currentSessionDetails.session.id
+  return weekSessions.findIndex(s => s.id === currentId) + 1
+})
+
+// Calcul de la durée totale de la prochaine course en minutes
+const nextSessionDuration = computed(() => {
+  if (!store.currentSessionDetails) return 0
+  const exercises = store.currentSessionDetails.session.exercises
+  const totalSeconds = exercises.reduce((acc, exo) => acc + parseInt(exo.duration_seconds), 0)
+  return Math.round(totalSeconds / 60)
+})
+
+// Formateur de temps pour la preview (ex: 1 min 30s)
+const formatDuration = (seconds) => {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  if (m === 0) return `${s}s`
+  return s > 0 ? `${m}min ${s}s` : `${m} min`
+}
 
 const startSession = () => router.push('/run')
 
@@ -61,35 +89,35 @@ onMounted(() => { store.initApp() })
   <main style="padding: 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
     <h1 style="text-align: center;">Vue d'ensemble</h1>
     
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 25px; padding: 15px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-  <!-- Avatar + Nom -->
-  <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 200px;">
-    <div style="width: 50px; height: 50px; border-radius: 50%; background: #ccc; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-      <img v-if="store.userProfile?.avatar" :src="store.userProfile.avatar" style="width: 100%; height: 100%; object-fit: cover;" />
-      <span v-else style="color: white; font-size: 20px;">👤</span>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 25px; padding: 15px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+      <!-- Avatar + Nom -->
+      <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 200px;">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: #ccc; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <img v-if="store.userProfile?.avatar" :src="store.userProfile.avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+          <span v-else style="color: white; font-size: 20px;">👤</span>
+        </div>
+        <h2 style="margin: 0; font-size: 1.2rem; color: #333; line-height: 1.2;">
+          Bonjour, <br/><span style="color: #4CAF50;">{{ store.userProfile?.first_name || 'Coureur' }}</span> !
+        </h2>
+      </div>
+      
+      <!-- Boutons -->
+      <div style="display: flex; gap: 10px; flex-shrink: 0;">
+        <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
+          Profil
+        </button>
+        <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
+          Déconnexion
+        </button>
+      </div>
     </div>
-    <h2 style="margin: 0; font-size: 1.2rem; color: #333; line-height: 1.2;">
-      Bonjour, <br/><span style="color: #4CAF50;">{{ store.userProfile?.first_name || 'Coureur' }}</span> !
-    </h2>
-  </div>
-  
-  <!-- Boutons -->
-  <div style="display: flex; gap: 10px; flex-shrink: 0;">
-    <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
-      Profil
-    </button>
-    <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
-      Déconnexion
-    </button>
-  </div>
-</div>
 
     <div v-if="!store.seasonData || !store.currentProgress">
       <p style="text-align: center;">Synchronisation en cours...</p>
     </div>
     
     <div v-else>
-     <!-- Barre de progression globale de la saison -->
+      <!-- Barre de progression globale de la saison -->
       <div v-if="store.seasonData" style="margin-bottom: 25px; padding: 0 5px;">
         <div style="display: flex; justify-content: space-between; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: bold;">
           <span style="color: inherit;">Progression : {{ store.seasonData.title }} ({{ store.seasonData.weeks.length }} semaines)</span>
@@ -103,18 +131,46 @@ onMounted(() => { store.initApp() })
       <!-- Carte de la prochaine session (Style JCPMF) -->
       <div v-if="store.currentSessionDetails" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee;">
         
-        <!-- En-tête Gris : Semaine -->
+        <!-- En-tête Gris : Semaine (sur X) -->
         <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: white !important;">{{ store.currentSessionDetails.week.title }}</span>
-          <span style="font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; color: white !important;">Prochaine course</span>
+          <span style="color: white !important;">
+            {{ store.currentSessionDetails.week.title }} (sur {{ store.seasonData.weeks.length }})
+          </span>
+          <span style="font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; color: white !important;">
+            Prochaine course
+          </span>
         </div>
         
-        <!-- Sous-titre Orange : Jour -->
-        <div style="background: #e38734; color: white; padding: 8px 15px; font-weight: bold; font-size: 1.05rem;">
-          <span style="color: white !important;">{{ store.currentSessionDetails.session.title.split(' - ')[1] || store.currentSessionDetails.session.title }}</span>
+        <!-- Sous-titre Orange INTERACTIF : Jour et Durée -->
+        <div @click="showPreview = !showPreview" style="background: #e38734; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+          <div>
+            <div style="font-weight: bold; font-size: 1.1rem; color: white !important;">
+              Entraînement {{ nextSessionIndex }}
+            </div>
+            <div style="font-size: 0.9rem; opacity: 0.95; color: white !important; margin-top: 2px;">
+              ({{ store.currentSessionDetails.session.title.split(' - ')[1] || store.currentSessionDetails.session.title }})
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-weight: bold; font-size: 1.2rem; color: white !important;">
+              {{ nextSessionDuration }} min
+            </div>
+            <div style="font-size: 0.75rem; color: white !important; margin-top: 2px; text-transform: uppercase; font-weight: bold; opacity: 0.9;">
+              Détails {{ showPreview ? '▲' : '▼' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone de Preview (déroulante) -->
+        <div v-if="showPreview" style="background: #fafafa; padding: 15px; border-bottom: 1px solid #eee;">
+           <div v-for="(exo, i) in store.currentSessionDetails.session.exercises" :key="i" 
+                style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ddd; font-size: 0.95rem; color: #444;">
+              <span style="text-transform: capitalize;">{{ exo.type }}</span>
+              <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
+           </div>
         </div>
         
-        <!-- Statistiques cumulées -->
+        <!-- Statistiques cumulées globales -->
         <div style="padding: 20px 15px; display: flex; justify-content: space-around;">
           <div style="text-align: center;">
             <div style="font-size: 1.5rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
@@ -169,6 +225,7 @@ onMounted(() => { store.initApp() })
       <SessionHistory />
 
     </div>
+    
     <!-- Nouvelle section : La boîte à outils -->
     <div style="margin-top: 30px; margin-bottom: 25px;">
       <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px;">Préparation & Conseils</h3>
