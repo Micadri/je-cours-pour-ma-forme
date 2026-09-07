@@ -4,6 +4,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 $email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
 $ip = $_SERVER['REMOTE_ADDR'];
+
 $max_attempts = 5;
 $lockout_time = 10; // Minutes
 
@@ -22,7 +23,8 @@ if ($attempt_data && $attempt_data['attempts'] >= $max_attempts) {
     }
 }
 
-$stmt = $pdo->prepare("SELECT id, password_hash FROM AD_users WHERE email = ?");
+// AJOUT : On récupère aussi le rôle
+$stmt = $pdo->prepare("SELECT id, password_hash, role FROM AD_users WHERE email = ?");
 $stmt->execute([$email]);
 $user = $stmt->fetch();
 
@@ -30,7 +32,9 @@ if ($user && password_verify($password, $user['password_hash'])) {
     $pdo->prepare("DELETE FROM AD_login_attempts WHERE ip_address = ?")->execute([$ip]);
     $token = bin2hex(random_bytes(32));
     $pdo->prepare("UPDATE AD_users SET api_token = ? WHERE id = ?")->execute([$token, $user['id']]);
-    echo json_encode(["status" => "success", "token" => $token]);
+    
+    // AJOUT : On inclut le rôle dans la réponse
+    echo json_encode(["status" => "success", "token" => $token, "role" => $user['role']]);
 } else {
     $pdo->prepare("INSERT INTO AD_login_attempts (ip_address, attempts) VALUES (?, 1) ON DUPLICATE KEY UPDATE attempts = attempts + 1")->execute([$ip]);
     http_response_code(401);

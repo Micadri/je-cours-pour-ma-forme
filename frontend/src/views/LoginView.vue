@@ -24,7 +24,12 @@ const handleLogin = async () => {
     if (data.status === 'success') {
       localStorage.setItem('auth_token', data.token)
       await store.initApp()
-      router.push('/')
+      // Redirection dynamique selon le rôle
+      if (data.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/')
+      }
     } else {
       errorMessage.value = data.message || 'Erreur de connexion'
     }

@@ -11,7 +11,6 @@ if ($user['role'] !== 'admin') {
 $action = $_GET['action'] ?? 'list';
 
 if ($action === 'list') {
-    // Récupère les coureurs avec leur progression et statistiques globales
     $stmt = $pdo->query("
         SELECT u.id, u.first_name, u.email, u.created_at,
                p.current_season_id, p.current_week_id, p.current_session_id,
@@ -24,8 +23,25 @@ if ($action === 'list') {
         GROUP BY u.id
         ORDER BY u.created_at DESC
     ");
-    $runners = $stmt->fetchAll();
-    echo json_encode(["status" => "success", "data" => $runners]);
+    echo json_encode(["status" => "success", "data" => $stmt->fetchAll()]);
+
+} elseif ($action === 'history') {
+    // NOUVELLE ROUTE : Historique détaillé d'un coureur
+    $user_id = $_GET['user_id'] ?? 0;
+    $stmt = $pdo->prepare("
+        SELECT l.created_at, l.distance_meters, l.steps_count,
+               s.title as session_title, w.title as week_title, w.id as week_id,
+               sea.title as season_title, sea.id as season_id
+        FROM AD_session_logs l
+        JOIN AD_sessions s ON l.session_id = s.id
+        JOIN AD_weeks w ON s.week_id = w.id
+        JOIN AD_seasons sea ON w.season_id = sea.id
+        WHERE l.user_id = ? AND l.status = 'completed'
+        ORDER BY l.created_at DESC
+    ");
+    $stmt->execute([$user_id]);
+    echo json_encode(["status" => "success", "data" => $stmt->fetchAll()]);
+
 } elseif ($action === 'export') {
     $format = $_GET['format'] ?? 'csv';
     $stmt = $pdo->query("
@@ -46,11 +62,8 @@ if ($action === 'list') {
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="coureurs.csv"');
         $output = fopen('php://output', 'w');
-        // En-têtes des colonnes CSV
         fputcsv($output, ['ID', 'Prenom', 'Email', 'Date_Inscription', 'Sessions_Terminees']);
-        foreach ($runners as $row) {
-            fputcsv($output, $row);
-        }
+        foreach ($runners as $row) { fputcsv($output, $row); }
         fclose($output);
     }
 }
