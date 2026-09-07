@@ -6,7 +6,7 @@ import SessionHistory from '../components/SessionHistory.vue'
 
 const handleLogout = () => {
   store.logout()
-  router.push('/login')
+  router.push('/welcome')
 }
 
 const router = useRouter()
@@ -167,21 +167,23 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
         </div>
       </div>
 
-      <!-- Carte de la prochaine session (Style JCPMF) -->
+ <!-- Carte de la prochaine session (Style JCPMF Amélioré) -->
       <div v-if="store.currentSessionDetails" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee;">
         
-        <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
+        <!-- En-tête Gris : Semaine (sur X) -->
+        <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.15rem; display: flex; justify-content: space-between; align-items: center;">
           <span style="color: white !important;">
             {{ store.currentSessionDetails.week.title }} (sur {{ store.seasonData.weeks.length }})
           </span>
-          <span style="font-size: 0.85rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; color: white !important;">
-            Prochaine course
+          <span style="font-size: 0.75rem; opacity: 0.95; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; color: white !important;">
+            PROCHAINE COURSE
           </span>
         </div>
         
-        <div @click="showPreview = !showPreview" style="background: #e38734; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+        <!-- Sous-titre Orange INTERACTIF : Jour et Durée -->
+        <div @click="showPreview = !showPreview" style="background: #e38734; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.2);">
           <div>
-            <div style="font-weight: bold; font-size: 1.1rem; color: white !important;">
+            <div style="font-weight: bold; font-size: 1.2rem; color: white !important;">
               Entraînement {{ nextSessionIndex }}
             </div>
             <div style="font-size: 0.9rem; opacity: 0.95; color: white !important; margin-top: 2px;">
@@ -189,15 +191,16 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
             </div>
           </div>
           <div style="text-align: right;">
-            <div style="font-weight: bold; font-size: 1.2rem; color: white !important;">
+            <div style="font-weight: bold; font-size: 1.3rem; color: white !important;">
               {{ nextSessionDuration }} min
             </div>
-            <div style="font-size: 0.75rem; color: white !important; margin-top: 2px; text-transform: uppercase; font-weight: bold; opacity: 0.9;">
-              Détails {{ showPreview ? '▲' : '▼' }}
+            <div style="font-size: 0.75rem; color: white !important; margin-top: 2px; text-transform: uppercase; font-weight: 800; opacity: 0.95;">
+              DÉTAILS {{ showPreview ? '▲' : '▼' }}
             </div>
           </div>
         </div>
 
+        <!-- Zone de Preview (déroulante) -->
         <div v-if="showPreview" style="background: #fafafa; padding: 15px; border-bottom: 1px solid #eee;">
            <div v-for="(exo, i) in store.currentSessionDetails.session.exercises" :key="i" 
                 style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ddd; font-size: 0.95rem; color: #444;">
@@ -206,15 +209,16 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
            </div>
         </div>
         
-        <div style="padding: 20px 15px; display: flex; justify-content: space-around;">
-          <div style="text-align: center;">
-            <div style="font-size: 1.5rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
-            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Distance totale</div>
+        <!-- Statistiques cumulées globales clarifiées -->
+        <div style="padding: 20px 15px; display: flex; justify-content: space-around; background: #fff;">
+          <div style="text-align: center; width: 45%;">
+            <div style="font-size: 1.6rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
+            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: bold;">Distance Cumulée</div>
           </div>
           <div style="width: 1px; background: #eee;"></div>
-          <div style="text-align: center;">
-            <div style="font-size: 1.5rem; color: #4CAF50; font-weight: bold;">{{ totalSteps }}</div>
-            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">Pas cumulés</div>
+          <div style="text-align: center; width: 45%;">
+            <div style="font-size: 1.6rem; color: #4CAF50; font-weight: bold;">{{ totalSteps }}</div>
+            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: bold;">Pas Cumulés</div>
           </div>
         </div>
       </div>
