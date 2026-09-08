@@ -190,7 +190,8 @@ export const useProgramStore = defineStore('program', () => {
       steps_count: payload.steps,
       elevation: payload.elevation,
       actual_duration: payload.duration,
-      weather: payload.weather
+      weather: payload.weather,
+      route: payload.route
     })
     
     currentProgress.value.current_session_id = nextSessionId
@@ -205,7 +206,7 @@ export const useProgramStore = defineStore('program', () => {
           body: JSON.stringify({
             session_id: currentId, next_session_id: nextSessionId,
             distance_meters: Math.round(payload.distance_km * 1000), steps_count: payload.steps,
-            elevation_gain: payload.elevation, actual_duration_seconds: payload.duration, weather_temp: payload.weather
+            elevation_gain: payload.elevation, actual_duration_seconds: payload.duration, weather_temp: payload.weather, route_data: payload.route
           })
         })
       } catch (e) {
@@ -218,7 +219,8 @@ export const useProgramStore = defineStore('program', () => {
           steps_count: payload.steps,
           elevation_gain: payload.elevation,
           actual_duration_seconds: payload.duration,
-          weather_temp: payload.weather
+          weather_temp: payload.weather,
+          route_data: payload.route
         })
       }
     }

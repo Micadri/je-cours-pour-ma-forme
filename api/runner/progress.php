@@ -12,7 +12,12 @@ try {
         $progress = ["current_season_id" => 1, "current_week_id" => 1, "current_session_id" => 1];
     }
 
-    $stmtHistory = $pdo->prepare("SELECT session_id, distance_meters, steps_count FROM AD_session_logs WHERE user_id = ? AND status = 'completed'");
+    // Récupération avec toutes les nouvelles données
+    $stmtHistory = $pdo->prepare("
+        SELECT session_id, distance_meters, steps_count, actual_duration_seconds, elevation_gain, route_data, weather_temp 
+        FROM AD_session_logs 
+        WHERE user_id = ? AND status = 'completed'
+    ");
     $stmtHistory->execute([$user['id']]);
     $history = $stmtHistory->fetchAll();
 
