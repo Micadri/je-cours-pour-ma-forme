@@ -24,12 +24,8 @@ const handleLogin = async () => {
     if (data.status === 'success') {
       localStorage.setItem('auth_token', data.token)
       await store.initApp()
-      // Redirection dynamique selon le rôle
-      if (data.role === 'admin') {
-        router.push('/admin')
-      } else {
-        router.push('/')
-      }
+      if (data.role === 'admin') router.push('/admin')
+      else router.push('/')
     } else {
       errorMessage.value = data.message || 'Erreur de connexion'
     }
@@ -40,40 +36,38 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <main style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 20px; font-family: sans-serif;">
+  <main class="flex flex-col justify-center items-center min-h-[80vh] p-5 font-body">
     
-    <!-- Bouton Retour -->
-    <div style="width: 100%; max-width: 400px; margin-bottom: 15px;">
-      <button @click="router.push('/welcome')" style="background: none; border: none; color: #4CAF50; font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">
+    <div class="w-full max-w-[400px] mb-4">
+      <button @click="router.push('/welcome')" class="bg-transparent border-none text-accent text-base font-bold cursor-pointer p-0 hover:opacity-80 transition-opacity">
         ← Retour à la présentation
       </button>
     </div>
 
-    <!-- Carte de connexion -->
-    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; box-sizing: border-box;">
-      <h1 style="text-align: center; color: #333; margin-top: 0;">Connexion</h1>
+    <div class="bg-surface p-8 rounded-xl shadow-md w-full max-w-[400px] border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <h1 class="text-center text-3xl text-primary font-heading font-bold mt-0 mb-6 dark:text-gray-100">Connexion</h1>
       
-      <p v-if="errorMessage" style="color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 5px; text-align: center; font-size: 14px;">
+      <p v-if="errorMessage" class="text-red-600 bg-red-50 p-3 rounded-md text-center text-sm font-bold mb-4 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-900/50">
         {{ errorMessage }}
       </p>
 
-      <p style="text-align: center; font-size: 14px; color: #666; margin-top: 15px;">
-          Pas encore de compte ? 
-          <router-link to="/register" style="color: #4CAF50; text-decoration: none; font-weight: bold;">S'inscrire</router-link>
+      <p class="text-center text-sm text-gray-600 mb-6 dark:text-gray-400">
+        Pas encore de compte ? 
+        <router-link to="/register" class="text-accent font-bold no-underline hover:opacity-80">S'inscrire</router-link>
       </p>
 
-      <form @submit.prevent="handleLogin" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+      <form @submit.prevent="handleLogin" class="flex flex-col gap-4">
         <div>
-          <label style="display: block; margin-bottom: 5px; color: #555; font-weight: bold;">Email</label>
-          <input type="email" v-model="email" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;" />
+          <label class="block mb-1.5 text-gray-700 font-bold dark:text-gray-300">Email</label>
+          <input type="email" v-model="email" required class="w-full p-2.5 border border-gray-300 rounded-md bg-surface text-text focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100" />
         </div>
         
         <div>
-          <label style="display: block; margin-bottom: 5px; color: #555; font-weight: bold;">Mot de passe</label>
-          <input type="password" v-model="password" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;" />
+          <label class="block mb-1.5 text-gray-700 font-bold dark:text-gray-300">Mot de passe</label>
+          <input type="password" v-model="password" required class="w-full p-2.5 border border-gray-300 rounded-md bg-surface text-text focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100" />
         </div>
 
-        <button type="submit" style="padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;">
+        <button type="submit" class="w-full p-3 mt-2 bg-primary text-accent rounded-cta text-lg font-bold cursor-pointer hover:bg-opacity-90 transition-colors uppercase tracking-wider font-heading">
           Se connecter
         </button>
       </form>

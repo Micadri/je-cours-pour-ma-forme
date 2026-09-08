@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Configuration du mode sombre manuel pour Tailwind V4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #003355;
   --color-accent: #8cc63f;
