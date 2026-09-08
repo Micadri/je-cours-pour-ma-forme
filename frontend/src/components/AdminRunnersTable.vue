@@ -44,7 +44,12 @@ const formatDate = (dateString) => {
             <td style="padding: 15px; font-weight: bold; color: #333;">{{ runner.first_name }}</td>
             <td style="padding: 15px; color: #666;">{{ runner.email }}</td>
             <td style="padding: 15px; color: #888; font-size: 0.9rem;">{{ formatDate(runner.created_at) }}</td>
-            <td style="padding: 15px;"><span style="background: #e38734; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">{{ runner.current_season_id || 1 }} - {{ runner.current_week_id || 1 }} - {{ runner.current_session_id || 1 }}</span></td>
+            <td style="padding: 15px;">
+              <!-- Le badge passe au gris (#9e9e9e) si la distance est de 0 -->
+              <span :style="{ background: runner.total_distance > 0 ? '#e38734' : '#9e9e9e', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }">
+                {{ runner.current_season_id || 1 }} - {{ runner.current_week_id || 1 }} - {{ runner.current_session_id || 1 }}
+              </span>
+            </td>
             <td style="padding: 15px; color: #4CAF50; font-weight: bold;">{{ ((runner.total_distance || 0) / 1000).toFixed(2) }} km</td>
           </tr>
         </tbody>
@@ -52,3 +57,9 @@ const formatDate = (dateString) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.runner-row:hover {
+  background-color: #f1f8e9 !important;
+}
+</style>
