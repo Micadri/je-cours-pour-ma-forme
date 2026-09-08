@@ -4,13 +4,22 @@ import { useRouter } from 'vue-router'
 import { useProgramStore } from '../stores/program'
 import SessionHistory from '../components/SessionHistory.vue'
 
-const handleLogout = () => {
-  store.logout()
-  router.push('/welcome')
-}
-
 const router = useRouter()
 const store = useProgramStore()
+
+const handleLogout = () => {
+  store.logout()
+  window.location.href = '/welcome' // Force le rechargement navigateur pur
+}
+
+const handleSeasonChange = async (event) => {
+  const newSeasonId = event.target.value
+  if (confirm("Changer de saison réinitialisera votre progression affichée. Continuer ?")) {
+    await store.changeSeason(newSeasonId)
+  } else {
+    event.target.value = store.seasonData.id // Rétablit l'affichage si annulé
+  }
+}
 
 const showWeekSelector = ref(false)
 const selectedWeekId = ref(1)
@@ -33,7 +42,6 @@ const openWeekSelector = () => {
   }
 }
 
-// Calcul des totaux
 const totalSessionsInSeason = computed(() => {
   if (!store.seasonData) return 0
   return store.seasonData.weeks.reduce((acc, week) => acc + week.sessions.length, 0)
@@ -53,10 +61,8 @@ const totalSteps = computed(() => {
   return store.completedSessions.reduce((acc, session) => acc + (parseInt(session.steps) || 0), 0)
 })
 
-// Variable pour ouvrir/fermer la preview de la course actuelle
 const showPreview = ref(false)
 
-// Calcul du numéro de l'entraînement dans la semaine
 const nextSessionIndex = computed(() => {
   if (!store.currentSessionDetails) return 1
   const weekSessions = store.currentSessionDetails.week.sessions
@@ -64,7 +70,6 @@ const nextSessionIndex = computed(() => {
   return weekSessions.findIndex(s => s.id === currentId) + 1
 })
 
-// Calcul de la durée totale de la prochaine course
 const nextSessionDuration = computed(() => {
   if (!store.currentSessionDetails) return 0
   const exercises = store.currentSessionDetails.session.exercises
@@ -72,7 +77,6 @@ const nextSessionDuration = computed(() => {
   return Math.round(totalSeconds / 60)
 })
 
-// Formateur de temps pour la preview
 const formatDuration = (seconds) => {
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
@@ -80,7 +84,6 @@ const formatDuration = (seconds) => {
   return s > 0 ? `${m}min ${s}s` : `${m} min`
 }
 
-// Calcul des prochaines sessions à venir
 const upcomingSessions = computed(() => {
   if (!store.seasonData || !store.currentProgress) return []
   const currentId = Number(store.currentProgress.current_session_id)
@@ -113,7 +116,6 @@ const startSession = () => router.push('/run')
 
 onMounted(() => { store.initApp() })
 
-// Vérification du mode invité
 const isGuest = computed(() => !localStorage.getItem('auth_token'))
 </script>
 
@@ -146,8 +148,10 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
       </div>
 
       <div v-if="store.seasonData" style="padding: 0 5px;">
-        <div style="display: flex; justify-content: space-between; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: bold;">
-          <span style="color: inherit;">Progression : {{ store.seasonData.title }} ({{ store.seasonData.weeks.length }} semaines)</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: bold;">
+          <select :value="store.seasonData.id" @change="handleSeasonChange" style="padding: 4px 8px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; background: #fff; font-size: 0.9rem; color: #333; max-width: 75%;">
+            <option v-for="s in store.allSeasons" :key="s.id" :value="s.id">{{ s.title }}</option>
+          </select>
           <span style="color: #4CAF50;">{{ seasonProgressPercent }}%</span>
         </div>
         <div style="height: 12px; background: #e0e0e0; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
@@ -212,7 +216,6 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
           </div>
         </div>
 
-      <!-- Bouton de lancement conditionnel -->
       <button 
         v-if="!isGuest || store.completedSessions.length === 0"
         @click="startSession" 
@@ -311,15 +314,12 @@ const isGuest = computed(() => !localStorage.getItem('auth_token'))
 </template>
 
 <style scoped>
-/* Conteneur principal gérant la largeur selon l'écran */
 .dashboard-container {
   padding: 20px 20px 50vh 20px;
   font-family: sans-serif;
   margin: 0 auto;
-  max-width: 600px; /* Largeur pour les téléphones */
+  max-width: 600px;
 }
-
-/* Sur les ordinateurs et tablettes, on étire la vue à 900px */
 @media (min-width: 768px) {
   .dashboard-container {
     max-width: 900px;
