@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProgramStore } from '../stores/program'
 import { useWeather } from '../composables/useWeather'
@@ -7,17 +7,28 @@ import { useWeather } from '../composables/useWeather'
 const router = useRouter()
 const store = useProgramStore()
 const { temperature, isWeatherLoading, fetchWeather } = useWeather()
-const isGuest = computed(() => !localStorage.getItem('auth_token'))
 
+const isGuest = computed(() => !localStorage.getItem('auth_token'))
+const isOnline = ref(navigator.onLine)
+
+const updateNetworkStatus = () => { isOnline.value = navigator.onLine }
 const handleLogout = () => { store.logout(); window.location.href = '/welcome' }
 const goToProfile = () => router.push('/profile')
 const goToLogin = () => router.push('/login')
 const goToRegister = () => router.push('/register')
 
 onMounted(() => {
+  window.addEventListener('online', updateNetworkStatus)
+  window.addEventListener('offline', updateNetworkStatus)
+  
   if ('geolocation' in navigator) {
     navigator.geolocation.getCurrentPosition((pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude), () => {})
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('online', updateNetworkStatus)
+  window.removeEventListener('offline', updateNetworkStatus)
 })
 </script>
 
@@ -36,11 +47,22 @@ onMounted(() => {
         </div>
       </div>
       
-      <!-- Widget Météo -->
-      <div class="text-sm font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300">
-        <span v-if="isWeatherLoading">☁️ ...</span>
-        <span v-else-if="temperature !== null">🌤️ {{ temperature }}°C</span>
-        <span v-else>📍 GPS Requis</span>
+      <!-- Zone des Mini-Widgets -->
+      <div class="flex items-center gap-2">
+        <!-- Widget Réseau -->
+        <div class="flex items-center justify-center w-8 h-8 rounded-lg border transition-colors duration-300"
+             :class="isOnline ? 'bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-800' : 'bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-800'"
+             :title="isOnline ? 'Connecté' : 'Hors-ligne'">
+          <span v-if="isOnline" class="text-green-500 text-sm drop-shadow-sm">📶</span>
+          <span v-else class="text-red-500 text-sm drop-shadow-sm">📵</span>
+        </div>
+
+        <!-- Widget Météo -->
+        <div class="text-sm font-bold text-gray-500 bg-gray-50 px-3 h-8 rounded-lg border border-gray-100 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300 flex items-center">
+          <span v-if="isWeatherLoading">☁️ ...</span>
+          <span v-else-if="temperature !== null">🌤️ {{ temperature }}°C</span>
+          <span v-else>📍 GPS</span>
+        </div>
       </div>
     </div>
     

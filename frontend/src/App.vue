@@ -6,7 +6,15 @@ import { useProgramStore } from './stores/program'
 const store = useProgramStore()
 const isOffline = ref(!navigator.onLine)
 
-const updateOnlineStatus = () => { isOffline.value = !navigator.onLine }
+const updateOnlineStatus = async () => {
+  isOffline.value = !navigator.onLine
+  
+  // Si le réseau revient, on vide la file d'attente et on rafraîchit
+  if (navigator.onLine) {
+    await store.syncQueue()
+    await store.initApp() 
+  }
+}
 
 const updateTheme = () => {
   if (store.userProfile?.theme === 'dark') {

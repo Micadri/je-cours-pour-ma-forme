@@ -52,10 +52,10 @@ export const useProgramStore = defineStore('program', () => {
   async function syncQueue() {
     const token = localStorage.getItem('auth_token')
     if (!token) return
-         
+    
     const queue = JSON.parse(localStorage.getItem('pwa_sync_queue') || '[]')
     if (queue.length === 0) return
-
+    
     try {
       for (const action of queue) {
         if (action.type === 'log') {
@@ -63,11 +63,14 @@ export const useProgramStore = defineStore('program', () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                session_id: action.session_id,
-               next_session_id: action.next_session_id,
-               distance_meters: action.distance_meters,
-               steps_count: action.steps_count
-              })
+              session_id: action.session_id,
+              next_session_id: action.next_session_id,
+              distance_meters: action.distance_meters,
+              steps_count: action.steps_count,
+              elevation_gain: action.elevation_gain,
+              actual_duration_seconds: action.actual_duration_seconds,
+              weather_temp: action.weather_temp
+            })
           })
         } else if (action.type === 'reset') {
           await fetch(`${API_BASE}/runner/reset.php?token=${token}`, {
@@ -206,10 +209,19 @@ export const useProgramStore = defineStore('program', () => {
           })
         })
       } catch (e) {
-        // Fallback file d'attente
+        // Mode Hors-Ligne : on sauvegarde dans la file d'attente
+        addToSyncQueue({ 
+          type: 'log', 
+          session_id: currentId, 
+          next_session_id: nextSessionId, 
+          distance_meters: Math.round(payload.distance_km * 1000), 
+          steps_count: payload.steps,
+          elevation_gain: payload.elevation,
+          actual_duration_seconds: payload.duration,
+          weather_temp: payload.weather
+        })
       }
     }
-    await initApp()
   }
 
   // NOUVEAU: Changer la saison active
@@ -297,5 +309,10 @@ export const useProgramStore = defineStore('program', () => {
     userProfile.value = null
   }
 
-  return { seasonData, allSeasons, currentProgress, currentSessionDetails, completedSessions, userProfile, initApp, completeSession, deleteSession, resetToWeek, resetSeason, changeSeason, logout, updateProfile }
+  return { 
+    seasonData, allSeasons, currentProgress, currentSessionDetails, 
+    completedSessions, userProfile, initApp, completeSession, 
+    deleteSession, resetToWeek, resetSeason, changeSeason, 
+    logout, updateProfile, syncQueue // <-- Ajout ici
+  }
 })
