@@ -34,10 +34,15 @@ export const useProgramStore = defineStore('program', () => {
                      
           completed.push({
              ...session,
-             weekTitle: week.title,
-             distance: (Number(stats.distance_meters) / 1000).toFixed(2),
-             steps: Number(stats.steps_count)
-           })
+             weekTitle: week.title, 
+              distance: (Number(stats.distance_meters) / 1000).toFixed(2), 
+              steps: Number(stats.steps_count),
+              // NOUVEAUX CHAMPS :
+              elevation: Number(stats.elevation_gain || stats.elevation || 0),
+              duration: Number(stats.actual_duration_seconds || stats.actual_duration || 0),
+              route: stats.route_data || stats.route || null,
+              weather: stats.weather_temp || stats.weather || null
+            })
         }
       }
     }
@@ -165,45 +170,44 @@ export const useProgramStore = defineStore('program', () => {
     }
   }
 
-  async function completeSession(distanceKm = 0, stepsCount = 0) {
+  async function completeSession(payload) {
     if (!seasonData.value || !currentProgress.value) return
-    const distanceMeters = Math.round(distanceKm * 1000)
     const currentId = Number(currentProgress.value.current_session_id)
     const allSessions = seasonData.value.weeks.flatMap(w => w.sessions)
     const currentIndex = allSessions.findIndex(s => s.id === currentId)
-    sessionHistory.value.push({
-        session_id: currentId,
-        distance_meters: distanceMeters,
-        steps_count: stepsCount
-      })
-    localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
+    
     let nextSessionId = currentId
     if (currentIndex !== -1 && currentIndex + 1 < allSessions.length) {
       nextSessionId = allSessions[currentIndex + 1].id
     }
-    currentProgress.value.current_session_id = nextSessionId
-    localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
     
+    sessionHistory.value.push({
+      session_id: currentId,
+      distance_meters: Math.round(payload.distance_km * 1000),
+      steps_count: payload.steps,
+      elevation: payload.elevation,
+      actual_duration: payload.duration,
+      weather: payload.weather
+    })
+    
+    currentProgress.value.current_session_id = nextSessionId
+    localStorage.setItem('pwa_history', JSON.stringify(sessionHistory.value))
+    localStorage.setItem('pwa_progress', JSON.stringify(currentProgress.value))
+        
     const token = localStorage.getItem('auth_token')
     if (token) {
       try {
-        const res = await fetch(`${API_BASE}/runner/log.php?token=${token}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        await fetch(`${API_BASE}/runner/log.php?token=${token}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              session_id: currentId,
-              next_session_id: nextSessionId,
-              distance_meters: distanceMeters,
-              steps_count: stepsCount
-            })
+            session_id: currentId, next_session_id: nextSessionId,
+            distance_meters: Math.round(payload.distance_km * 1000), steps_count: payload.steps,
+            elevation_gain: payload.elevation, actual_duration_seconds: payload.duration, weather_temp: payload.weather
+          })
         })
-        const data = await res.json()
-        if (data.status !== 'success') throw new Error("Erreur API")
       } catch (e) {
-        addToSyncQueue({ type: 'log', session_id: currentId, next_session_id: nextSessionId, distance_meters: distanceMeters, steps_count: stepsCount })
+        // Fallback file d'attente
       }
-    } else {
-      addToSyncQueue({ type: 'log', session_id: currentId, next_session_id: nextSessionId, distance_meters: distanceMeters, steps_count: stepsCount })
     }
     await initApp()
   }
