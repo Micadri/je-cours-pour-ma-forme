@@ -95,7 +95,6 @@ try {
         }
 
         $pdo->beginTransaction();
-
         $stmtOrder = $pdo->query("SELECT MAX(order_num) FROM AD_seasons");
         $season_order = ((int)$stmtOrder->fetchColumn()) + 1;
 
@@ -123,7 +122,6 @@ try {
                 $stmtExo->execute([$session_id, 'echauffement', 300, $exo_order++]);
 
                 $progressFactor = ($globalSession - 1) / max(1, ($totalSessions - 1));
-                
                 $runTime = round(60 + ($progressFactor * 1740)); 
                 $walkTime = round(120 - ($progressFactor * 120)); 
                 $coreTargetTime = (15 * 60) + round($progressFactor * 25 * 60); 
@@ -138,7 +136,6 @@ try {
                         $accumulated += $walkTime;
                     }
                 }
-
                 $stmtExo->execute([$session_id, 'etirements', 300, $exo_order++]);
                 $globalSession++;
             }
@@ -147,7 +144,6 @@ try {
         echo json_encode(["status" => "success", "message" => "Saison générée avec succès !"]);
 
     } elseif ($action === 'get_all_seasons') {
-        // NOUVELLE ROUTE : Lister toutes les saisons pour le CRUD
         $stmt = $pdo->query("SELECT * FROM AD_seasons ORDER BY order_num ASC");
         $seasons = $stmt->fetchAll();
         foreach ($seasons as &$s) {
@@ -158,7 +154,6 @@ try {
         echo json_encode(["status" => "success", "data" => $seasons]);
 
     } elseif ($action === 'update_season') {
-        // NOUVELLE ROUTE : Éditer le nom d'une saison
         $data = json_decode(file_get_contents("php://input"), true);
         $id = $data['id'] ?? 0;
         $title = trim($data['title'] ?? '');
@@ -171,14 +166,47 @@ try {
         }
 
     } elseif ($action === 'delete_season') {
-        // NOUVELLE ROUTE : Supprimer intégralement une saison
         $id = $_GET['id'] ?? 0;
         $pdo->beginTransaction();
-        // Suppression en cascade inversée pour protéger les contraintes de clés étrangères
         $pdo->prepare("DELETE FROM AD_exercises WHERE session_id IN (SELECT id FROM AD_sessions WHERE week_id IN (SELECT id FROM AD_weeks WHERE season_id = ?))")->execute([$id]);
         $pdo->prepare("DELETE FROM AD_sessions WHERE week_id IN (SELECT id FROM AD_weeks WHERE season_id = ?)")->execute([$id]);
         $pdo->prepare("DELETE FROM AD_weeks WHERE season_id = ?")->execute([$id]);
         $pdo->prepare("DELETE FROM AD_seasons WHERE id = ?")->execute([$id]);
+        $pdo->commit();
+        echo json_encode(["status" => "success"]);
+
+    } elseif ($action === 'get_season_details') {
+        // NOUVELLE ROUTE : Charger toute la hiérarchie pour le constructeur
+        $season_id = $_GET['id'] ?? 0;
+        $stmtW = $pdo->prepare("SELECT * FROM AD_weeks WHERE season_id = ? ORDER BY order_num");
+        $stmtW->execute([$season_id]);
+        $weeks = $stmtW->fetchAll();
+        foreach ($weeks as &$week) {
+            $stmtS = $pdo->prepare("SELECT * FROM AD_sessions WHERE week_id = ? ORDER BY order_num");
+            $stmtS->execute([$week['id']]);
+            $week['sessions'] = $stmtS->fetchAll();
+            foreach ($week['sessions'] as &$session) {
+                $stmtE = $pdo->prepare("SELECT * FROM AD_exercises WHERE session_id = ? ORDER BY order_num");
+                $stmtE->execute([$session['id']]);
+                $session['exercises'] = $stmtE->fetchAll();
+            }
+        }
+        echo json_encode(["status" => "success", "data" => $weeks]);
+
+    } elseif ($action === 'update_session_exercises') {
+        // NOUVELLE ROUTE : Sauvegarder la nouvelle configuration d'un entraînement
+        $data = json_decode(file_get_contents("php://input"), true);
+        $session_id = $data['session_id'] ?? 0;
+        $exercises = $data['exercises'] ?? [];
+        
+        $pdo->beginTransaction();
+        // On supprime tous les anciens blocs pour insérer les nouveaux avec le bon ordre
+        $pdo->prepare("DELETE FROM AD_exercises WHERE session_id = ?")->execute([$session_id]);
+        $stmtExo = $pdo->prepare("INSERT INTO AD_exercises (session_id, type, duration_seconds, order_num) VALUES (?, ?, ?, ?)");
+        $order = 1;
+        foreach ($exercises as $exo) {
+            $stmtExo->execute([$session_id, $exo['type'], $exo['duration_seconds'], $order++]);
+        }
         $pdo->commit();
         echo json_encode(["status" => "success"]);
     }
