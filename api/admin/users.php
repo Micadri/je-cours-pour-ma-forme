@@ -82,6 +82,13 @@ try {
         $stmt = $pdo->prepare("DELETE FROM AD_feedbacks WHERE id = ?");
         $stmt->execute([$feedback_id]);
         echo json_encode(["status" => "success"]);
+
+        } elseif ($action === 'accept_feedback') {
+        // NOUVELLE ROUTE : Marquer comme traité
+        $feedback_id = $_GET['id'] ?? 0;
+        $stmt = $pdo->prepare("UPDATE AD_feedbacks SET status = 'accepted' WHERE id = ?");
+        $stmt->execute([$feedback_id]);
+        echo json_encode(["status" => "success"]);
         
     } elseif ($action === 'generate_season') {
         $data = json_decode(file_get_contents("php://input"), true);
