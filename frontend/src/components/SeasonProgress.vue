@@ -25,15 +25,15 @@ const handleSeasonChange = async (event) => {
 </script>
 
 <template>
-  <div v-if="store.seasonData" style="padding: 0 5px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #555; margin-bottom: 8px; font-weight: bold;">
-      <select :value="store.seasonData.id" @change="handleSeasonChange" style="padding: 4px 8px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; background: #fff; font-size: 0.9rem; color: #333; max-width: 75%;">
+  <div v-if="store.seasonData" class="px-1">
+    <div class="flex justify-between items-center text-sm text-gray-600 mb-2 font-bold dark:text-gray-300">
+      <select :value="store.seasonData.id" @change="handleSeasonChange" class="px-2 py-1 rounded-md border border-gray-300 font-bold bg-surface text-sm text-text max-w-[75%] focus:ring-2 focus:ring-accent outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100">
         <option v-for="s in store.allSeasons" :key="s.id" :value="s.id">{{ s.title }}</option>
       </select>
-      <span style="color: #4CAF50;">{{ seasonProgressPercent }}%</span>
+      <span class="text-accent font-bold text-lg font-heading">{{ seasonProgressPercent }}%</span>
     </div>
-    <div style="height: 12px; background: #e0e0e0; border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-      <div :style="{ width: seasonProgressPercent + '%', height: '100%', background: '#4CAF50', transition: 'width 0.5s ease-in-out' }"></div>
+    <div class="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner dark:bg-gray-700">
+      <div :style="{ width: seasonProgressPercent + '%' }" class="h-full bg-accent transition-all duration-500 ease-in-out"></div>
     </div>
   </div>
 </template>

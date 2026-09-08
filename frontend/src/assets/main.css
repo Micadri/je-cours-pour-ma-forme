@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #003355;
+  --color-accent: #8cc63f;
+  --color-background: #f4f4f4;
+  --color-surface: #ffffff;
+  --color-text: #333333;
+  
+  --font-heading: "Oswald", sans-serif;
+  --font-body: "Inter", sans-serif;
+  
+  --radius-cta: 4px;
+}

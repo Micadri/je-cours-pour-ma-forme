@@ -1,29 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-const props = defineProps({
-  runner: Object,
-  history: Array,
-  isLoading: Boolean
-})
-
+const props = defineProps({ runner: Object, history: Array, isLoading: Boolean })
 const emit = defineEmits(['close'])
 
-const filterSeason = ref('')
-const filterWeek = ref('')
-const filterSession = ref('')
+const filterSeason = ref(''); const filterWeek = ref(''); const filterSession = ref('')
 
 const availableSeasons = computed(() => [...new Set(props.history.map(h => h.season_title))])
 const availableWeeks = computed(() => [...new Set(props.history.filter(h => !filterSeason.value || h.season_title === filterSeason.value).map(h => h.week_title))])
 const availableSessions = computed(() => [...new Set(props.history.filter(h => (!filterSeason.value || h.season_title === filterSeason.value) && (!filterWeek.value || h.week_title === filterWeek.value)).map(h => h.session_index))].sort((a, b) => a - b))
-
-const filteredHistory = computed(() => {
-  return props.history.filter(log => {
-    return (!filterSeason.value || log.season_title === filterSeason.value) &&
-           (!filterWeek.value || log.week_title === filterWeek.value) &&
-           (!filterSession.value || log.session_index === filterSession.value)
-  })
-})
+const filteredHistory = computed(() => props.history.filter(log => (!filterSeason.value || log.season_title === filterSeason.value) && (!filterWeek.value || log.week_title === filterWeek.value) && (!filterSession.value || log.session_index === filterSession.value)))
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Date inconnue'
@@ -32,46 +18,43 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;">
-    <div style="background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 800px; max-height: 85vh; overflow-y: auto; position: relative;">
-      <button @click="emit('close')" style="position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #888;">✖</button>
-      <h2 style="margin-top: 0; color: #333;">Historique de <span style="color: #4CAF50;">{{ runner.first_name }}</span></h2>
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-5 backdrop-blur-sm">
+    <div class="bg-surface p-6 rounded-xl w-full max-w-[800px] max-h-[85vh] overflow-y-auto relative shadow-2xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+      <button @click="emit('close')" class="absolute top-4 right-5 bg-transparent border-none text-2xl cursor-pointer text-gray-400 hover:text-gray-800 transition-colors dark:hover:text-gray-200">✖</button>
+      <h2 class="mt-0 font-heading text-2xl text-text font-bold mb-5 dark:text-gray-100">Historique de <span class="text-primary dark:text-accent">{{ runner.first_name }}</span></h2>
       
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-        <select v-model="filterSeason" @change="filterWeek = ''; filterSession = ''" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; flex: 1; min-width: 150px;">
-          <option value="">Toutes les Saisons</option>
-          <option v-for="s in availableSeasons" :key="s" :value="s">{{ s }}</option>
+      <div class="flex gap-2.5 mb-5 flex-wrap">
+        <select v-model="filterSeason" @change="filterWeek = ''; filterSession = ''" class="p-2 rounded-md border border-gray-300 flex-1 min-w-[150px] bg-surface focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 text-sm">
+          <option value="">Toutes les Saisons</option><option v-for="s in availableSeasons" :key="s" :value="s">{{ s }}</option>
         </select>
-        <select v-model="filterWeek" @change="filterSession = ''" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; flex: 1; min-width: 150px;">
-          <option value="">Toutes les Semaines</option>
-          <option v-for="w in availableWeeks" :key="w" :value="w">{{ w }}</option>
+        <select v-model="filterWeek" @change="filterSession = ''" class="p-2 rounded-md border border-gray-300 flex-1 min-w-[150px] bg-surface focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 text-sm">
+          <option value="">Toutes les Semaines</option><option v-for="w in availableWeeks" :key="w" :value="w">{{ w }}</option>
         </select>
-        <select v-model="filterSession" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; flex: 1; min-width: 150px;">
-          <option value="">Tous les Entraînements</option>
-          <option v-for="idx in availableSessions" :key="idx" :value="idx">{{ idx === 1 ? '1ère' : idx + 'ème' }} session</option>
+        <select v-model="filterSession" class="p-2 rounded-md border border-gray-300 flex-1 min-w-[150px] bg-surface focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 text-sm">
+          <option value="">Tous les Entraînements</option><option v-for="idx in availableSessions" :key="idx" :value="idx">{{ idx === 1 ? '1ère' : idx + 'ème' }} session</option>
         </select>
       </div>
 
-      <div v-if="isLoading" style="text-align: center; padding: 20px; color: #888;">Chargement de l'historique...</div>
-      <div v-else-if="filteredHistory.length === 0" style="text-align: center; padding: 20px; color: #888; font-style: italic;">Aucune session trouvée.</div>
+      <div v-if="isLoading" class="text-center p-10 text-gray-500 dark:text-gray-400">Chargement de l'historique...</div>
+      <div v-else-if="filteredHistory.length === 0" class="text-center p-10 text-gray-500 italic bg-gray-50 rounded-lg dark:bg-gray-900 dark:text-gray-400">Aucune session trouvée.</div>
       
-      <table v-else style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <table v-else class="w-full border-collapse text-left text-sm rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
         <thead>
-          <tr style="background: #f4f4f4; color: #555;">
-            <th style="padding: 10px; border-bottom: 2px solid #ddd;">Date</th>
-            <th style="padding: 10px; border-bottom: 2px solid #ddd;">Saison</th>
-            <th style="padding: 10px; border-bottom: 2px solid #ddd;">Semaine</th>
-            <th style="padding: 10px; border-bottom: 2px solid #ddd;">Entraînement</th>
-            <th style="padding: 10px; border-bottom: 2px solid #ddd; text-align: right;">Distance</th>
+          <tr class="bg-gray-100 text-gray-500 font-heading uppercase text-xs tracking-wide dark:bg-gray-900 dark:text-gray-400">
+            <th class="p-3 border-b border-gray-200 dark:border-gray-700 font-medium">Date</th>
+            <th class="p-3 border-b border-gray-200 dark:border-gray-700 font-medium">Saison</th>
+            <th class="p-3 border-b border-gray-200 dark:border-gray-700 font-medium">Semaine</th>
+            <th class="p-3 border-b border-gray-200 dark:border-gray-700 font-medium">Entraînement</th>
+            <th class="p-3 border-b border-gray-200 dark:border-gray-700 font-medium text-right">Distance</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(log, i) in filteredHistory" :key="i" style="border-bottom: 1px solid #eee;">
-            <td style="padding: 10px; color: #666;">{{ formatDate(log.completed_at || log.created_at) }}</td>
-            <td style="padding: 10px; font-weight: bold; color: #333;">{{ log.season_title }}</td>
-            <td style="padding: 10px; color: #555;">{{ log.week_title }}</td>
-            <td style="padding: 10px; color: #e38734; font-weight: bold;">{{ log.session_index === 1 ? '1ère' : log.session_index + 'ème' }} session</td>
-            <td style="padding: 10px; font-weight: bold; color: #4CAF50; text-align: right;">{{ (log.distance_meters / 1000).toFixed(2) }} km</td>
+          <tr v-for="(log, i) in filteredHistory" :key="i" class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-800">
+            <td class="p-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ formatDate(log.completed_at || log.created_at) }}</td>
+            <td class="p-3 font-bold text-text dark:text-gray-200">{{ log.season_title }}</td>
+            <td class="p-3 text-gray-500 dark:text-gray-400">{{ log.week_title }}</td>
+            <td class="p-3 text-primary font-bold dark:text-gray-200">{{ log.session_index === 1 ? '1ère' : log.session_index + 'ème' }} session</td>
+            <td class="p-3 font-bold text-accent text-right whitespace-nowrap">{{ (log.distance_meters / 1000).toFixed(2) }} km</td>
           </tr>
         </tbody>
       </table>

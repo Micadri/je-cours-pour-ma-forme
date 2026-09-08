@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProgramStore } from '../stores/program'
 
-// Import de nos composants Admin isolés
 import AdminRunnersTable from '../components/AdminRunnersTable.vue'
 import AdminFeedbacks from '../components/AdminFeedbacks.vue'
 import AdminProgramBuilder from '../components/AdminProgramBuilder.vue'
@@ -22,15 +21,11 @@ const isLoading = ref(true)
 const isFeedbacksLoading = ref(true)
 const errorMessage = ref('')
 
-// États modale Historique
 const selectedRunner = ref(null)
 const runnerHistory = ref([])
 const isHistoryLoading = ref(false)
 
-const handleLogout = () => {
-  store.logout()
-  router.push('/welcome')
-}
+const handleLogout = () => { store.logout(); router.push('/welcome') }
 
 const fetchRunners = async () => {
   try {
@@ -90,59 +85,41 @@ const viewRunnerHistory = async (runner) => {
 
 const acceptFeedback = async (id) => {
   try {
-    const res = await fetch(`${API_BASE}/admin/users.php?action=accept_feedback&id=${id}`, {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-    })
+    const res = await fetch(`${API_BASE}/admin/users.php?action=accept_feedback&id=${id}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } })
     const data = await res.json()
     if (data.status === 'success') {
       const fb = feedbacks.value.find(f => f.id === id)
-      if (fb) fb.status = 'accepted' // Met à jour l'UI instantanément
+      if (fb) fb.status = 'accepted'
     }
-  } catch (e) {
-    alert("Erreur réseau")
-  }
+  } catch (e) { alert("Erreur réseau") }
 }
 
-onMounted(() => {
-  fetchRunners(); fetchFeedbacks(); fetchAllSeasons()
-})
+onMounted(() => { fetchRunners(); fetchFeedbacks(); fetchAllSeasons() })
 </script>
 
 <template>
-  <main style="padding: 20px; font-family: sans-serif; max-width: 900px; margin: 0 auto; position: relative;">
-
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-      <h1 style="color: #333; margin: 0;">⚙️ Administration</h1>
-      <button @click="handleLogout"
-        style="padding: 8px 15px; background: #f44336; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Déconnexion</button>
+  <main class="p-5 font-body max-w-[900px] mx-auto relative">
+    
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="m-0 font-heading text-3xl text-primary font-bold dark:text-gray-100">⚙️ Administration</h1>
+      <button @click="handleLogout" class="px-4 py-2 bg-red-500 text-white border-none rounded-cta cursor-pointer font-bold hover:bg-red-600 transition-colors">Déconnexion</button>
     </div>
 
-    <div v-if="errorMessage"
-      style="background: #ffebee; color: #d32f2f; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px;">
-      {{ errorMessage }}</div>
-
-    <div
-      style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; flex-wrap: wrap;">
-      <button @click="activeTab = 'runners'"
-        :style="{ background: activeTab === 'runners' ? '#4CAF50' : 'transparent', color: activeTab === 'runners' ? 'white' : '#666', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }">👥
-        Les Coureurs</button>
-      <button @click="activeTab = 'feedbacks'"
-        :style="{ background: activeTab === 'feedbacks' ? '#4CAF50' : 'transparent', color: activeTab === 'feedbacks' ? 'white' : '#666', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }">📬
-        Signalements</button>
-      <button @click="activeTab = 'program'"
-        :style="{ background: activeTab === 'program' ? '#4CAF50' : 'transparent', color: activeTab === 'program' ? 'white' : '#666', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }">📁
-        Gérer le Programme</button>
+    <div v-if="errorMessage" class="bg-red-50 text-red-600 p-4 rounded-xl text-center font-bold mb-5 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-900/30">
+      {{ errorMessage }}
     </div>
 
-    <!-- Composants Isolés -->
-    <AdminRunnersTable v-if="activeTab === 'runners'" :runners="runners" :isLoading="isLoading" @export="exportData"
-      @view-history="viewRunnerHistory" />
-    <AdminFeedbacks v-if="activeTab === 'feedbacks'" :feedbacks="feedbacks" :isLoading="isFeedbacksLoading"
-      @refresh="fetchFeedbacks" @delete="deleteFeedback" @accept="acceptFeedback" />
+    <!-- Navigation par Onglets -->
+    <div class="flex gap-2 mb-6 border-b-2 border-gray-200 pb-3 flex-wrap dark:border-gray-700">
+      <button @click="activeTab = 'runners'" class="px-5 py-2 rounded-cta font-bold cursor-pointer transition-colors font-heading tracking-wide uppercase text-sm" :class="activeTab === 'runners' ? 'bg-primary text-accent' : 'bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'">👥 Les Coureurs</button>
+      <button @click="activeTab = 'feedbacks'" class="px-5 py-2 rounded-cta font-bold cursor-pointer transition-colors font-heading tracking-wide uppercase text-sm" :class="activeTab === 'feedbacks' ? 'bg-primary text-accent' : 'bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'">📬 Signalements</button>
+      <button @click="activeTab = 'program'" class="px-5 py-2 rounded-cta font-bold cursor-pointer transition-colors font-heading tracking-wide uppercase text-sm" :class="activeTab === 'program' ? 'bg-primary text-accent' : 'bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'">📁 Gérer le Programme</button>
+    </div>
+
+    <AdminRunnersTable v-if="activeTab === 'runners'" :runners="runners" :isLoading="isLoading" @export="exportData" @view-history="viewRunnerHistory" />
+    <AdminFeedbacks v-if="activeTab === 'feedbacks'" :feedbacks="feedbacks" :isLoading="isFeedbacksLoading" @refresh="fetchFeedbacks" @delete="deleteFeedback" @accept="acceptFeedback" />
     <AdminProgramBuilder v-if="activeTab === 'program'" :allSeasons="allSeasons" @refresh-seasons="fetchAllSeasons" />
 
-    <RunnerHistoryModal v-if="selectedRunner" :runner="selectedRunner" :history="runnerHistory"
-      :isLoading="isHistoryLoading" @close="selectedRunner = null" />
-
+    <RunnerHistoryModal v-if="selectedRunner" :runner="selectedRunner" :history="runnerHistory" :isLoading="isHistoryLoading" @close="selectedRunner = null" />
   </main>
 </template>

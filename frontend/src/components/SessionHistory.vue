@@ -4,24 +4,16 @@ import { useProgramStore } from '../stores/program'
 
 const store = useProgramStore()
 const expandedSessionId = ref(null)
-
-const toggleSessionDetails = (id) => {
-  expandedSessionId.value = expandedSessionId.value === id ? null : id
-}
-
 const currentPage = ref(1)
 const itemsPerPage = 3
+
 const totalPages = computed(() => Math.ceil(store.completedSessions.length / itemsPerPage))
+const paginatedSessions = computed(() => store.completedSessions.slice((currentPage.value - 1) * itemsPerPage, currentPage.value * itemsPerPage))
 
-const paginatedSessions = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return store.completedSessions.slice(start, start + itemsPerPage)
-})
-
-const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
+// Fonctions réintégrées pour gérer la constante proprement
 const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
 
-// Fonction pour trouver la position de l'entraînement dans la semaine
 const getSessionIndex = (sessionId) => {
   if (!store.seasonData) return 1
   for (const week of store.seasonData.weeks) {
@@ -34,51 +26,41 @@ const getSessionIndex = (sessionId) => {
 
 <template>
   <div>
-    <p v-if="store.completedSessions.length === 0" style="color: #888; text-align: center; font-style: italic; margin-top: 5px;">
-      Aucune course terminée pour le moment.
-    </p>
+    <p v-if="store.completedSessions.length === 0" class="text-gray-500 text-center italic mt-2 dark:text-gray-400">Aucune course terminée pour le moment.</p>
     
     <div v-else>
-      <!-- Conteneur unique fusionné -->
-      <div style="background: #fff; border-radius: 12px; border: 1px solid #ddd; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-        <div v-for="(session, index) in paginatedSessions" :key="session.id" 
-             :style="{ borderBottom: index < paginatedSessions.length - 1 ? '1px solid #eee' : 'none' }">
-          
-          <div @click="toggleSessionDetails(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
+      <div class="bg-surface rounded-xl border border-gray-200 overflow-hidden shadow-sm dark:bg-gray-800 dark:border-gray-700">
+        <div v-for="session in paginatedSessions" :key="session.id" class="border-b border-gray-100 last:border-none dark:border-gray-700">
+          <div @click="expandedSessionId = expandedSessionId === session.id ? null : session.id" class="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors dark:hover:bg-gray-700/50">
             <div>
-              <div style="font-weight: bold; color: #4CAF50; font-size: 0.9rem;">{{ session.weekTitle }}</div>
-              <div style="color: #555; font-size: 0.85rem; margin-top: 2px;">
-                {{ getSessionIndex(session.id) === 1 ? '1ère' : getSessionIndex(session.id) + 'ème' }} session de la semaine
-              </div>
+              <div class="font-bold text-primary font-heading tracking-wide dark:text-gray-200">{{ session.weekTitle }}</div>
+              <div class="text-gray-500 text-xs mt-1 dark:text-gray-400 font-medium">Session {{ getSessionIndex(session.id) }}</div>
             </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-              <span style="color: #aaa; font-size: 12px; font-weight: bold;">{{ expandedSessionId === session.id ? '▲' : '▼' }}</span>
-              <button @click.stop="store.deleteSession(session.id)" style="background: none; border: none; font-size: 16px; cursor: pointer; color: #ff5252; padding: 0;" title="Annuler">✖</button>
+            <div class="flex items-center gap-4">
+              <span class="text-gray-400 text-xs font-bold">{{ expandedSessionId === session.id ? '▲' : '▼' }}</span>
+              <button @click.stop="store.deleteSession(session.id)" class="text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-colors dark:hover:bg-red-900/30" title="Annuler">🗑️</button>
             </div>
           </div>
 
-          <div v-if="expandedSessionId === session.id" style="display: flex; justify-content: space-around; padding: 12px 15px; background: #fafafa; border-top: 1px solid #eee;">
-            <div style="text-align: center;">
-              <strong style="color: #333; font-size: 1rem;">{{ session.distance }} km</strong>
-              <div style="font-size: 0.75rem; color: #888; text-transform: uppercase;">Distance</div>
+          <div v-if="expandedSessionId === session.id" class="flex justify-around p-4 bg-gray-50 border-t border-gray-100 dark:bg-gray-900 dark:border-gray-700">
+            <div class="text-center">
+              <strong class="text-primary font-heading text-xl dark:text-gray-100">{{ session.distance }} <span class="text-accent text-sm">km</span></strong>
+              <div class="text-[0.65rem] text-gray-400 uppercase tracking-widest mt-1 font-bold">Distance</div>
             </div>
-            <div style="text-align: center;">
-              <strong style="color: #333; font-size: 1rem;">{{ session.steps }}</strong>
-              <div style="font-size: 0.75rem; color: #888; text-transform: uppercase;">Pas</div>
+            <div class="w-px bg-gray-200 dark:bg-gray-700"></div>
+            <div class="text-center">
+              <strong class="text-primary font-heading text-xl dark:text-gray-100">{{ session.steps }}</strong>
+              <div class="text-[0.65rem] text-gray-400 uppercase tracking-widest mt-1 font-bold">Pas</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Pagination Textuelle Allégée -->
-      <div v-if="totalPages > 1" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 0 5px;">
-        <button @click="prevPage" :disabled="currentPage === 1" style="background: none; border: none; color: #4CAF50; font-weight: bold; font-size: 0.9rem; cursor: pointer; padding: 5px 0;" :style="{ opacity: currentPage === 1 ? 0.3 : 1 }">
-          ← Précédent
-        </button>
-        <span style="font-size: 0.85rem; color: #666;">Page {{ currentPage }} / {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="currentPage === totalPages" style="background: none; border: none; color: #4CAF50; font-weight: bold; font-size: 0.9rem; cursor: pointer; padding: 5px 0;" :style="{ opacity: currentPage === totalPages ? 0.3 : 1 }">
-          Suivant →
-        </button>
+      <!-- Pagination corrigée -->
+      <div v-if="totalPages > 1" class="flex justify-between items-center mt-4 px-2">
+        <button @click="prevPage" :disabled="currentPage === 1" class="text-primary font-bold text-sm hover:opacity-80 disabled:opacity-30 dark:text-accent uppercase tracking-wide font-heading transition-opacity">Précédent</button>
+        <span class="text-xs text-gray-500 font-bold dark:text-gray-400">{{ currentPage }} / {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="text-primary font-bold text-sm hover:opacity-80 disabled:opacity-30 dark:text-accent uppercase tracking-wide font-heading transition-opacity">Suivant</button>
       </div>
     </div>
   </div>

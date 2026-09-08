@@ -11,28 +11,32 @@ const handleLogout = () => {
   store.logout()
   window.location.href = '/welcome'
 }
+
+const goToProfile = () => router.push('/profile')
+const goToLogin = () => router.push('/login')
+const goToRegister = () => router.push('/register')
 </script>
 
 <template>
-  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 25px; padding: 15px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-    <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 200px;">
-      <div style="width: 50px; height: 50px; border-radius: 50%; background: #ccc; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-        <img v-if="store.userProfile?.avatar" :src="store.userProfile.avatar" style="width: 100%; height: 100%; object-fit: cover;" />
-        <span v-else style="color: white; font-size: 20px;">👤</span>
+  <div class="flex flex-wrap justify-between items-center gap-4 mb-6 p-4 bg-surface rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+    <div class="flex items-center gap-4 flex-1 min-w-[200px]">
+      <div class="w-12 h-12 rounded-full bg-gray-200 border-2 border-accent overflow-hidden flex items-center justify-center shrink-0 dark:bg-gray-700">
+        <img v-if="store.userProfile?.avatar" :src="store.userProfile.avatar" class="w-full h-full object-cover" />
+        <span v-else class="text-white text-xl">👤</span>
       </div>
-      <h2 style="margin: 0; font-size: 1.2rem; color: #333; line-height: 1.2;">
-        Bonjour, <br/><span style="color: #4CAF50;">{{ store.userProfile?.first_name || 'Coureur' }}</span> 
-        <span v-if="isGuest" style="font-size: 0.8rem; color: #888; font-weight: normal; margin-left: 5px;">(Invité)</span>
+      <h2 class="m-0 text-lg text-text leading-tight dark:text-gray-100 font-body">
+        Bonjour, <br/><span class="text-accent font-bold text-xl font-heading tracking-wide">{{ store.userProfile?.first_name || 'Coureur' }}</span> 
+        <span v-if="isGuest" class="text-xs text-gray-500 font-normal ml-1 dark:text-gray-400">(Invité)</span>
       </h2>
     </div>
     
-    <div v-if="!isGuest" style="display: flex; gap: 10px; flex-shrink: 0;">
-      <button @click="router.push('/profile')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Profil</button>
-      <button @click="handleLogout" style="padding: 8px 15px; background: transparent; color: #f44336; border: 1px solid #f44336; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Déconnexion</button>
+    <div v-if="!isGuest" class="flex gap-2 shrink-0">
+      <button @click="goToProfile" class="px-4 py-2 bg-gray-100 text-text rounded-cta text-sm font-bold hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Profil</button>
+      <button @click="handleLogout" class="px-4 py-2 bg-transparent text-red-500 border border-red-500 rounded-cta text-sm font-bold hover:bg-red-50 transition-colors dark:hover:bg-red-900/30">Déconnexion</button>
     </div>
-    <div v-else style="display: flex; gap: 10px; flex-shrink: 0;">
-      <button @click="router.push('/login')" style="padding: 8px 15px; background: transparent; color: #4CAF50; border: 1px solid #4CAF50; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">Se connecter</button>
-      <button @click="router.push('/register')" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">S'inscrire</button>
+    <div v-else class="flex gap-2 shrink-0">
+      <button @click="goToLogin" class="px-4 py-2 bg-transparent text-primary border border-primary rounded-cta text-sm font-bold hover:bg-primary/5 transition-colors dark:text-gray-300 dark:border-gray-300 dark:hover:bg-gray-800">Se connecter</button>
+      <button @click="goToRegister" class="px-4 py-2 bg-primary text-accent rounded-cta text-sm font-bold hover:bg-opacity-90 transition-colors font-heading tracking-wider uppercase">S'inscrire</button>
     </div>
   </div>
 </template>

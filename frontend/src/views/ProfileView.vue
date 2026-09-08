@@ -12,7 +12,6 @@ const theme = ref('light')
 const avatarBase64 = ref('')
 const saveMessage = ref('')
 
-// Le paramètre { immediate: true } force le remplissage dès que les données arrivent
 watch(() => store.userProfile, (newProfile) => {
   if (newProfile) {
     firstName.value = newProfile.first_name || ''
@@ -23,36 +22,26 @@ watch(() => store.userProfile, (newProfile) => {
 }, { immediate: true })
 
 onMounted(async () => {
-  if (!store.userProfile) {
-    await store.initApp()
-  }
+  if (!store.userProfile) await store.initApp()
 })
 
 const handleFileUpload = (event) => {
   const file = event.target.files[0]
   if (!file) return
-
   const reader = new FileReader()
   reader.onload = (e) => {
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      
       const MAX_SIZE = 200
       let width = img.width
       let height = img.height
-
-      if (width > height) {
-        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-      } else {
-        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-      }
-      
+      if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
+      else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
       canvas.width = width
       canvas.height = height
       ctx.drawImage(img, 0, 0, width, height)
-      
       avatarBase64.value = canvas.toDataURL('image/jpeg', 0.8)
     }
     img.src = e.target.result
@@ -79,7 +68,6 @@ const feedbackStatus = ref('')
 const sendFeedback = async () => {
   const token = localStorage.getItem('auth_token')
   if (!token) return
-
   try {
     const res = await fetch('https://cepegra-frontend.xyz/ingrwf13/adrien_ei2/api/runner/feedback.php?token=' + token, {
       method: 'POST',
@@ -87,101 +75,88 @@ const sendFeedback = async () => {
       body: JSON.stringify({ subject: feedbackSubject.value, message: feedbackMessage.value })
     })
     const data = await res.json()
-    
     if (data.status === 'success') {
       feedbackStatus.value = "Message envoyé, merci !"
-      setTimeout(() => { 
-        showFeedback.value = false
-        feedbackStatus.value = ''
-        feedbackMessage.value = ''
-      }, 2000)
-    } else {
-      feedbackStatus.value = data.message
-    }
-  } catch (e) {
-    feedbackStatus.value = "Erreur réseau."
-  }
+      setTimeout(() => { showFeedback.value = false; feedbackStatus.value = ''; feedbackMessage.value = '' }, 2000)
+    } else { feedbackStatus.value = data.message }
+  } catch (e) { feedbackStatus.value = "Erreur réseau." }
 }
 </script>
 
 <template>
-  <main style="padding: 20px; font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-    <button @click="router.push('/')" style="background: none; border: none; color: #4CAF50; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 20px;">
+  <main class="p-5 font-body max-w-[600px] mx-auto">
+    <button @click="router.push('/')" class="bg-transparent border-none text-accent text-base font-bold cursor-pointer mb-5">
       ← Retour à l'accueil
     </button>
     
-    <h1 style="margin-top: 0;">Mon Profil</h1>
-
-    <div style="background: #f4f4f4; padding: 20px; border-radius: 8px;">
+    <h1 class="mt-0 font-heading text-3xl text-primary font-bold mb-6 dark:text-gray-100">Mon Profil</h1>
+    
+    <div class="bg-surface p-5 rounded-xl border border-gray-200 shadow-sm dark:bg-gray-800 dark:border-gray-700">
       
       <!-- Section Photo -->
-      <div style="text-align: center; margin-bottom: 25px;">
-        <div style="width: 100px; height: 100px; border-radius: 50%; background: #ccc; margin: 0 auto 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 3px solid #4CAF50;">
-          <img v-if="avatarBase64" :src="avatarBase64" style="width: 100%; height: 100%; object-fit: cover;" />
-          <span v-else style="color: white; font-size: 40px;">🏃</span>
+      <div class="text-center mb-6">
+        <div class="w-[100px] h-[100px] rounded-full bg-gray-200 mx-auto mb-3 overflow-hidden flex items-center justify-center border-4 border-accent dark:bg-gray-700">
+          <img v-if="avatarBase64" :src="avatarBase64" class="w-full h-full object-cover" />
+          <span v-else class="text-white text-4xl">👤</span>
         </div>
-        
-        <!-- Le vrai input file est caché, on utilise un label stylisé à la place -->
-        <label style="background: #e0e0e0; color: #333; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; display: inline-block; font-weight: bold;">
+        <label class="bg-gray-100 text-text px-4 py-2 rounded-cta cursor-pointer text-sm inline-block font-bold hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
           Changer la photo
-          <input type="file" @change="handleFileUpload" accept="image/*" style="display: none;" />
+          <input type="file" @change="handleFileUpload" accept="image/*" class="hidden" />
         </label>
       </div>
 
       <!-- Formulaire -->
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Prénom</label>
-        <input type="text" v-model="firstName" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box;" />
+      <div class="mb-4">
+        <label class="block mb-1 font-bold text-gray-700 dark:text-gray-300">Prénom</label>
+        <input type="text" v-model="firstName" class="w-full p-2.5 border border-gray-300 rounded-md text-base box-border bg-surface focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100" />
       </div>
-
-      <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-        <label style="font-weight: bold; color: #333;">Annonces vocales (Coach)</label>
-        <input type="checkbox" v-model="audioEnabled" style="transform: scale(1.5);" />
+      
+      <div class="mb-4 flex items-center justify-between">
+        <label class="font-bold text-gray-700 dark:text-gray-300">Annonces vocales (Coach)</label>
+        <input type="checkbox" v-model="audioEnabled" class="scale-150 accent-accent" />
       </div>
-
-      <div style="margin-bottom: 25px;">
-        <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Thème de l'application</label>
-        <select v-model="theme" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; background: white;">
+      
+      <div class="mb-6">
+        <label class="block mb-1 font-bold text-gray-700 dark:text-gray-300">Thème de l'application</label>
+        <select v-model="theme" class="w-full p-2.5 border border-gray-300 rounded-md text-base bg-surface focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100">
           <option value="light">Mode Clair</option>
           <option value="dark">Mode Sombre</option>
         </select>
       </div>
-
-      <button @click="saveProfile" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;">
+      
+      <button @click="saveProfile" class="w-full p-4 bg-primary text-white rounded-cta text-lg font-bold cursor-pointer hover:bg-opacity-90 transition-colors uppercase tracking-wider font-heading">
         Sauvegarder mon profil
       </button>
-      <!-- Bouton d'ouverture -->
-      <button @click="showFeedback = true" style="width: 100%; padding: 12px; margin-top: 15px; background: transparent; color: #666; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
-        💡 Signaler un bug ou une idée
+
+      <!-- Bouton d'ouverture Feedback -->
+      <button @click="showFeedback = true" class="w-full p-3 mt-4 bg-transparent text-gray-600 border border-gray-300 rounded-cta text-base font-bold cursor-pointer hover:bg-gray-50 transition-colors dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+        Signaler un bug ou une idée
       </button>
 
       <!-- Modale de feedback -->
-      <div v-if="showFeedback" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;">
-        <div style="background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; position: relative;">
-          <button @click="showFeedback = false" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #888;">✕</button>
+      <div v-if="showFeedback" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-5">
+        <div class="bg-surface p-6 rounded-xl w-full max-w-[350px] relative dark:bg-gray-800">
+          <button @click="showFeedback = false" class="absolute top-2 right-4 bg-transparent border-none text-2xl cursor-pointer text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">×</button>
           
-          <h2 style="margin-top: 0; color: #333;">Votre retour</h2>
+          <h2 class="mt-0 font-heading text-2xl text-primary font-bold mb-4 dark:text-gray-100">Votre retour</h2>
           
-          <select v-model="feedbackSubject" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px;">
+          <select v-model="feedbackSubject" class="w-full p-2.5 mb-4 border border-gray-300 rounded-md bg-surface focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100">
             <option value="bug">Signaler un bug 🐛</option>
             <option value="idea">Proposer une idée 💡</option>
-            <option value="other">Autre message 💬</option>
+            <option value="other">Autre message ✉️</option>
           </select>
-
-          <textarea v-model="feedbackMessage" rows="4" placeholder="Expliquez-nous tout..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 15px; box-sizing: border-box; resize: vertical;"></textarea>
           
-          <button @click="sendFeedback" style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          <textarea v-model="feedbackMessage" rows="4" placeholder="Expliquez-nous tout..." class="w-full p-2.5 border border-gray-300 rounded-md mb-4 box-border resize-y bg-surface focus:ring-2 focus:ring-accent outline-none dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"></textarea>
+          
+          <button @click="sendFeedback" class="w-full p-3 bg-accent text-primary rounded-cta font-bold cursor-pointer hover:bg-opacity-90 transition-colors uppercase tracking-wider font-heading">
             Envoyer
           </button>
           
-          <p v-if="feedbackStatus" style="text-align: center; color: #4CAF50; font-weight: bold; margin-bottom: 0;">
-            {{ feedbackStatus }}
-          </p>
+          <p v-if="feedbackStatus" class="text-center text-accent font-bold mt-3 mb-0">{{ feedbackStatus }}</p>
         </div>
       </div>
-      <p v-if="saveMessage" style="color: #4CAF50; text-align: center; margin-top: 15px; font-weight: bold;">
-        {{ saveMessage }}
-      </p>
+
+      <p v-if="saveMessage" class="text-accent text-center mt-4 font-bold">{{ saveMessage }}</p>
     </div>
   </main>
 </template>

@@ -15,12 +15,7 @@ const upcomingSessions = computed(() => {
     for (const session of week.sessions) {
       if (session.id > currentId) {
         const durationSeconds = session.exercises.reduce((acc, exo) => acc + parseInt(exo.duration_seconds), 0)
-        upcoming.push({
-          ...session,
-          weekTitle: week.title,
-          sessionIndex,
-          durationMin: Math.round(durationSeconds / 60)
-        })
+        upcoming.push({ ...session, weekTitle: week.title, sessionIndex, durationMin: Math.round(durationSeconds / 60) })
       }
       sessionIndex++
     }
@@ -28,37 +23,34 @@ const upcomingSessions = computed(() => {
   return upcoming.slice(0, 3) 
 })
 
-const toggleUpcoming = (id) => {
-  expandedUpcomingId.value = expandedUpcomingId.value === id ? null : id
-}
-
 const formatDuration = (seconds) => {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return s > 0 ? `${m}min ${s}s` : `${m} min`
+  const m = Math.floor(seconds / 60); const s = seconds % 60
+  return s > 0 ? `${m}m ${s}s` : `${m} min`
 }
 </script>
 
 <template>
   <div v-if="upcomingSessions.length > 0">
-    <h3 style="color: #333; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">À venir...</h3>
+    <h3 class="font-heading text-xl font-bold mb-3 border-b-2 border-gray-200 pb-2 text-primary dark:text-gray-100 dark:border-gray-700">À venir...</h3>
     
-    <div style="background: #fff; border-radius: 12px; border: 1px solid #ddd; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-      <div v-for="(session, index) in upcomingSessions" :key="'up-' + session.id" :style="{ borderBottom: index < upcomingSessions.length - 1 ? '1px solid #eee' : 'none' }">
-        <div @click="toggleUpcoming(session.id)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer;">
+    <div class="bg-surface rounded-xl border border-gray-200 overflow-hidden shadow-sm dark:bg-gray-800 dark:border-gray-700">
+      <div v-for="(session, index) in upcomingSessions" :key="'up-' + session.id" class="border-b border-gray-100 last:border-none dark:border-gray-700">
+        <div @click="expandedUpcomingId = expandedUpcomingId === session.id ? null : session.id" class="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors dark:hover:bg-gray-700/50 group">
           <div>
-            <div style="font-weight: bold; color: #e38734; font-size: 0.95rem;">{{ session.weekTitle }}</div>
-            <div style="color: #666; font-size: 0.85rem; margin-top: 2px;">{{ session.sessionIndex === 1 ? '1ère' : session.sessionIndex + 'ème' }} session • {{ session.durationMin }} min</div>
+            <div class="font-bold text-primary font-heading tracking-wide text-lg dark:text-gray-200 group-hover:text-accent transition-colors">{{ session.weekTitle }}</div>
+            <div class="text-gray-500 text-xs mt-1 dark:text-gray-400 font-medium">Session {{ session.sessionIndex }} • {{ session.durationMin }} min</div>
           </div>
-          <div style="font-size: 0.7rem; color: #888; text-transform: uppercase; font-weight: bold; background: #f4f4f4; padding: 4px 8px; border-radius: 12px; border: 1px solid #ddd; display: flex; align-items: center; gap: 4px;">
-            Détails <span>{{ expandedUpcomingId === session.id ? '▲' : '▼' }}</span>
+          
+          <!-- Badge Détails redessiné -->
+          <div :class="expandedUpcomingId === session.id ? 'bg-primary text-accent' : 'bg-primary/10 text-primary'" class="text-[0.65rem] uppercase font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors dark:bg-gray-700 dark:text-gray-300">
+            Détails <span class="text-[0.5rem]">{{ expandedUpcomingId === session.id ? '▲' : '▼' }}</span>
           </div>
         </div>
         
-        <div v-if="expandedUpcomingId === session.id" style="background: #fafafa; padding: 12px 15px; border-top: 1px solid #eee;">
-          <div v-for="(exo, i) in session.exercises" :key="i" style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #ddd; font-size: 0.85rem; color: #555;">
-            <span style="text-transform: capitalize;">{{ exo.type }}</span>
-            <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
+        <div v-if="expandedUpcomingId === session.id" class="bg-gray-50 p-4 border-t border-gray-100 dark:bg-gray-900 dark:border-gray-700">
+          <div v-for="(exo, i) in session.exercises" :key="i" class="flex justify-between py-1 border-b border-dashed border-gray-300 text-sm text-gray-600 last:border-0 dark:border-gray-700 dark:text-gray-400">
+            <span class="capitalize">{{ exo.type }}</span>
+            <span class="font-bold text-accent">{{ formatDuration(exo.duration_seconds) }}</span>
           </div>
         </div>
       </div>

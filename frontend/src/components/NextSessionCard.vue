@@ -11,24 +11,17 @@ const showPreview = ref(false)
 const showWeekSelector = ref(false)
 const selectedWeekId = ref(1)
 
-const totalDistance = computed(() => {
-  const sum = store.completedSessions.reduce((acc, session) => acc + (parseFloat(session.distance) || 0), 0)
-  return sum.toFixed(2)
-})
-
+const totalDistance = computed(() => (store.completedSessions.reduce((acc, session) => acc + (parseFloat(session.distance) || 0), 0)).toFixed(2))
 const totalSteps = computed(() => store.completedSessions.reduce((acc, session) => acc + (parseInt(session.steps) || 0), 0))
 
 const nextSessionIndex = computed(() => {
   if (!store.currentSessionDetails) return 1
-  const weekSessions = store.currentSessionDetails.week.sessions
-  const currentId = store.currentSessionDetails.session.id
-  return weekSessions.findIndex(s => s.id === currentId) + 1
+  return store.currentSessionDetails.week.sessions.findIndex(s => s.id === store.currentSessionDetails.session.id) + 1
 })
 
 const nextSessionDuration = computed(() => {
   if (!store.currentSessionDetails) return 0
-  const exercises = store.currentSessionDetails.session.exercises
-  const totalSeconds = exercises.reduce((acc, exo) => acc + parseInt(exo.duration_seconds), 0)
+  const totalSeconds = store.currentSessionDetails.session.exercises.reduce((acc, exo) => acc + parseInt(exo.duration_seconds), 0)
   return Math.round(totalSeconds / 60)
 })
 
@@ -43,11 +36,7 @@ const availableWeeks = computed(() => {
   if (!store.seasonData || !store.currentSessionDetails || !store.currentProgress) return []
   const currentWeekId = store.currentSessionDetails.week.id
   const currentSessionId = store.currentProgress.current_session_id
-  return store.seasonData.weeks.filter(w => {
-    if (w.id < currentWeekId) return true
-    if (w.id === currentWeekId) return currentSessionId > w.sessions[0].id
-    return false
-  })
+  return store.seasonData.weeks.filter(w => (w.id < currentWeekId) || (w.id === currentWeekId && currentSessionId > w.sessions[0].id))
 })
 
 const openWeekSelector = () => {
@@ -58,71 +47,85 @@ const openWeekSelector = () => {
 }
 
 const startSession = () => router.push('/run')
+const goToRegister = () => router.push('/register')
 </script>
 
 <template>
   <div v-if="store.currentSessionDetails">
-    <div style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee;">
-      <div style="background: #6e757b; color: white; padding: 12px 15px; font-weight: bold; font-size: 1.15rem; text-align: center;">
-        <span style="color: white !important;">{{ store.currentSessionDetails.week.title }} (sur {{ store.seasonData.weeks.length }})</span>
+    <!-- CARTE PRINCIPALE -->
+    <div class="bg-surface rounded-xl overflow-hidden shadow-md mb-6 border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
+      
+      <!-- En-tête de la semaine -->
+      <div class="bg-primary text-white py-3 px-4 font-bold text-lg text-center font-heading tracking-wide uppercase">
+        {{ store.currentSessionDetails.week.title }} <span class="opacity-75 text-sm">(sur {{ store.seasonData.weeks.length }})</span>
       </div>
       
-      <div @click="showPreview = !showPreview" style="background: #e38734; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.2);">
+      <!-- Bannière Entraînement Suivant -->
+      <div @click="showPreview = !showPreview" class="bg-primary text-white py-5 px-5 flex justify-between items-center cursor-pointer transition-all hover:brightness-110 shadow-inner">
         <div>
-          <div style="font-size: 0.75rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; color: white !important; margin-bottom: 3px;">Prochaine course</div>
-          <div style="font-weight: bold; font-size: 1.1rem; color: white !important;">
-            {{ nextSessionIndex === 1 ? '1ère' : nextSessionIndex + 'ème' }} session de la semaine
+          <div class="text-[0.65rem] opacity-70 uppercase tracking-widest font-black mb-1 font-body">Prochaine course</div>
+          <div class="font-bold text-xl font-heading tracking-wide text-white">
+            {{ nextSessionIndex === 1 ? '1ère' : nextSessionIndex + 'ème' }} session
           </div>
         </div>
-        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-          <div style="font-weight: bold; font-size: 1.3rem; color: white !important;">{{ nextSessionDuration }} min</div>
-          <div style="font-size: 0.75rem; color: white !important; margin-top: 6px; text-transform: uppercase; font-weight: bold; background: rgba(255, 255, 255, 0.25); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.4); display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            Détails <span style="font-size: 0.65rem;">{{ showPreview ? '▲' : '▼' }}</span>
+        
+        <div class="text-right flex flex-col items-end">
+          <div class="font-bold text-3xl font-heading tracking-wider text-accent drop-shadow-sm">
+            {{ nextSessionDuration }} min
+          </div>
+          
+          <div class="text-[0.7rem] mt-2 uppercase font-black bg-accent text-primary px-4 py-1.5 rounded-full flex items-center gap-1.5 transition-transform hover:scale-105 shadow-md">
+            Détails <span class="text-[0.55rem]">{{ showPreview ? '▲' : '▼' }}</span>
           </div>
         </div>
       </div>
 
-      <div v-if="showPreview" style="background: #fafafa; padding: 15px; border-bottom: 1px solid #eee;">
-          <div v-for="(exo, i) in store.currentSessionDetails.session.exercises" :key="i" style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ddd; font-size: 0.95rem; color: #444;">
-            <span style="text-transform: capitalize;">{{ exo.type }}</span>
-            <span style="font-weight: bold; color: #e38734;">{{ formatDuration(exo.duration_seconds) }}</span>
+      <!-- Aperçu des blocs -->
+      <div v-if="showPreview" class="bg-gray-50 p-4 border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+          <div v-for="(exo, i) in store.currentSessionDetails.session.exercises" :key="i" class="flex justify-between py-1.5 border-b border-dashed border-gray-300 text-[0.95rem] text-gray-700 last:border-0 dark:border-gray-600 dark:text-gray-300">
+            <span class="capitalize font-medium">{{ exo.type }}</span>
+            <span class="font-bold text-accent">{{ formatDuration(exo.duration_seconds) }}</span>
           </div>
       </div>
       
-      <div style="padding: 15px; background: #fff;">
-        <div style="text-align: center; color: #666; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">Statistiques de la saison</div>
-        <div style="display: flex; justify-content: space-around;">
-          <div style="text-align: center; width: 45%;">
-            <div style="font-size: 1.6rem; color: #4CAF50; font-weight: bold;">{{ totalDistance }} km</div>
-            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: bold;">Distance Cumulée</div>
+      <!-- Statistiques -->
+      <div class="p-5 bg-surface dark:bg-gray-800">
+        <div class="text-center text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">Statistiques de la saison</div>
+        <div class="flex justify-around items-center">
+          <div class="text-center w-[45%]">
+            <div class="text-3xl text-primary font-heading font-bold dark:text-gray-100">{{ totalDistance }} <span class="text-lg text-accent">km</span></div>
+            <div class="text-[0.65rem] text-gray-400 uppercase tracking-widest mt-1 font-bold">Distance</div>
           </div>
-          <div style="width: 1px; background: #eee;"></div>
-          <div style="text-align: center; width: 45%;">
-            <div style="font-size: 1.6rem; color: #4CAF50; font-weight: bold;">{{ totalSteps }}</div>
-            <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: bold;">Pas Cumulés</div>
+          <div class="w-px h-10 bg-gray-200 dark:bg-gray-700"></div>
+          <div class="text-center w-[45%]">
+            <div class="text-3xl text-primary font-heading font-bold dark:text-gray-100">{{ totalSteps }}</div>
+            <div class="text-[0.65rem] text-gray-400 uppercase tracking-widest mt-1 font-bold">Pas Cumulés</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Contrôles -->
-    <button v-if="!isGuest || store.completedSessions.length === 0" @click="startSession" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px;">
+    <!-- BOUTON DÉMARRER -->
+    <button v-if="!isGuest || store.completedSessions.length === 0" @click="startSession" class="w-full py-4 bg-primary text-accent rounded-cta text-xl font-bold cursor-pointer mb-4 shadow-lg hover:bg-opacity-90 transition-all uppercase tracking-widest font-heading active:scale-[0.98]">
       Démarrer la session
     </button>
-    <button v-else @click="router.push('/register')" style="width: 100%; padding: 15px; background: #e38734; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(227, 135, 52, 0.3);">
+    <button v-else @click="goToRegister" class="w-full py-4 bg-accent text-primary rounded-cta text-lg font-bold cursor-pointer mb-4 shadow-lg hover:bg-opacity-90 transition-all uppercase tracking-wide font-heading">
       🔒 S'inscrire pour continuer
     </button>
 
-    <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: stretch; height: 40px;">
-      <button v-if="!showWeekSelector" @click="openWeekSelector" :disabled="availableWeeks.length === 0" :style="{ flex: 1, background: availableWeeks.length === 0 ? '#f0f0f0' : '#e0e0e0', border: 'none', borderRadius: '5px', cursor: availableWeeks.length === 0 ? 'not-allowed' : 'pointer', color: availableWeeks.length === 0 ? '#aaa' : '#333', fontWeight: 'bold' }">Reset Semaine</button>
-      <div v-else style="flex: 2; display: flex; gap: 5px;">
-        <select v-model="selectedWeekId" style="flex: 1; padding: 0 5px; border-radius: 5px; border: 1px solid #ccc; background: #fff; font-size: 14px;">
+    <!-- Contrôles Secondaires -->
+    <div class="flex gap-3 mb-4 items-stretch h-10">
+      <button v-if="!showWeekSelector" @click="openWeekSelector" :disabled="availableWeeks.length === 0" class="flex-1 rounded-cta font-bold text-sm transition-colors" :class="availableWeeks.length === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'">Reset Semaine</button>
+      
+      <div v-else class="flex-2 flex gap-2 w-full">
+        <select v-model="selectedWeekId" class="flex-1 px-2 rounded-cta border border-gray-300 bg-surface text-sm focus:ring-2 focus:ring-accent outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
           <option v-for="week in availableWeeks" :key="week.id" :value="week.id">{{ week.title }}</option>
         </select>
-        <button @click="store.resetToWeek(selectedWeekId); showWeekSelector = false" style="padding: 0 15px; background: #4CAF50; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold;">✔</button>
-        <button @click="showWeekSelector = false" style="padding: 0 15px; background: #9e9e9e; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold;">✖</button>
+        <button @click="store.resetToWeek(selectedWeekId); showWeekSelector = false" class="px-4 bg-accent text-primary rounded-cta font-bold hover:bg-opacity-90">✔</button>
+        <button @click="showWeekSelector = false" class="px-4 bg-gray-400 text-white rounded-cta font-bold hover:bg-gray-500">✖</button>
       </div>
-      <button v-if="!showWeekSelector" @click="store.resetSeason" style="flex: 1; background: #ffebee; border: none; border-radius: 5px; cursor: pointer; color: #d32f2f; font-weight: bold;">Reset Saison</button>
+      
+      <button v-if="!showWeekSelector" @click="store.resetSeason" class="flex-1 bg-red-50 text-red-600 rounded-cta font-bold text-sm hover:bg-red-100 transition-colors border border-red-100 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400">Reset Saison</button>
     </div>
   </div>
 </template>

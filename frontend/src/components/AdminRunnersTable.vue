@@ -18,48 +18,41 @@ const formatDate = (dateString) => {
 
 <template>
   <div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-      <h2 style="margin: 0; color: #4CAF50;">Liste des inscrits ({{ runners.length }})</h2>
-      <div style="display: flex; gap: 10px;">
-        <button @click="emit('export', 'csv')" style="padding: 8px 15px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">📥 Export CSV</button>
-        <button @click="emit('export', 'json')" style="padding: 8px 15px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">📥 Export JSON</button>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="m-0 font-heading text-2xl text-primary font-bold dark:text-gray-100">Liste des inscrits ({{ runners.length }})</h2>
+      <div class="flex gap-2">
+        <button @click="emit('export', 'csv')" class="bg-blue-500 text-white px-4 py-2 rounded-cta font-bold hover:bg-blue-600 transition-colors text-sm">📥 Export CSV</button>
+        <button @click="emit('export', 'json')" class="bg-gray-800 text-white px-4 py-2 rounded-cta font-bold hover:bg-gray-900 transition-colors text-sm dark:bg-gray-600">📥 Export JSON</button>
       </div>
     </div>
 
-    <div v-if="isLoading" style="text-align: center; padding: 40px; color: #888;">Chargement des données...</div>
+    <div v-if="isLoading" class="text-center p-10 text-gray-500 dark:text-gray-400">Chargement des données...</div>
 
-    <div v-else style="overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    <div v-else class="overflow-x-auto bg-surface rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <table class="w-full border-collapse text-left">
         <thead>
-          <tr style="background: #f4f4f4; color: #555;">
-            <th style="padding: 15px; border-bottom: 2px solid #ddd;">Nom</th>
-            <th style="padding: 15px; border-bottom: 2px solid #ddd;">Email</th>
-            <th style="padding: 15px; border-bottom: 2px solid #ddd;">Inscription</th>
-            <th style="padding: 15px; border-bottom: 2px solid #ddd;">Position (S. / Sem. / Entr.)</th>
-            <th style="padding: 15px; border-bottom: 2px solid #ddd;">Km Parcourus</th>
+          <tr class="bg-gray-50 text-gray-500 font-heading uppercase text-sm dark:bg-gray-900 dark:text-gray-400">
+            <th class="p-4 border-b-2 border-gray-200 dark:border-gray-700">Nom</th>
+            <th class="p-4 border-b-2 border-gray-200 dark:border-gray-700">Email</th>
+            <th class="p-4 border-b-2 border-gray-200 dark:border-gray-700">Inscription</th>
+            <th class="p-4 border-b-2 border-gray-200 dark:border-gray-700">Position (S. / Sem. / Entr.)</th>
+            <th class="p-4 border-b-2 border-gray-200 dark:border-gray-700">Km Parcourus</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="runner in runners" :key="runner.id" @click="emit('view-history', runner)" class="runner-row" style="border-bottom: 1px solid #eee; cursor: pointer;">
-            <td style="padding: 15px; font-weight: bold; color: #333;">{{ runner.first_name }}</td>
-            <td style="padding: 15px; color: #666;">{{ runner.email }}</td>
-            <td style="padding: 15px; color: #888; font-size: 0.9rem;">{{ formatDate(runner.created_at) }}</td>
-            <td style="padding: 15px;">
-              <!-- Le badge passe au gris (#9e9e9e) si la distance est de 0 -->
-              <span :style="{ background: runner.total_distance > 0 ? '#e38734' : '#9e9e9e', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }">
+          <tr v-for="runner in runners" :key="runner.id" @click="emit('view-history', runner)" class="border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-700/50">
+            <td class="p-4 font-bold text-text dark:text-gray-200">{{ runner.first_name }}</td>
+            <td class="p-4 text-gray-600 dark:text-gray-400">{{ runner.email }}</td>
+            <td class="p-4 text-gray-500 text-sm dark:text-gray-400">{{ formatDate(runner.created_at) }}</td>
+            <td class="p-4">
+              <span :class="runner.total_distance > 0 ? 'bg-primary text-accent' : 'bg-gray-400 text-white dark:bg-gray-600'" class="px-2.5 py-1 rounded-full text-xs font-bold font-heading tracking-wide">
                 {{ runner.current_season_id || 1 }} - {{ runner.current_week_id || 1 }} - {{ runner.current_session_id || 1 }}
               </span>
             </td>
-            <td style="padding: 15px; color: #4CAF50; font-weight: bold;">{{ ((runner.total_distance || 0) / 1000).toFixed(2) }} km</td>
+            <td class="p-4 text-accent font-bold text-lg font-heading">{{ ((runner.total_distance || 0) / 1000).toFixed(2) }} km</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 </template>
-
-<style scoped>
-.runner-row:hover {
-  background-color: #f1f8e9 !important;
-}
-</style>

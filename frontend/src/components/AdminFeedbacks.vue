@@ -1,60 +1,48 @@
 <script setup>
-defineProps({
-  feedbacks: Array,
-  isLoading: Boolean
-})
-
+defineProps({ feedbacks: Array, isLoading: Boolean })
 const emit = defineEmits(['refresh', 'delete', 'accept'])
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Date inconnue'
   const safeDate = dateString.replace(' ', 'T')
-  return new Date(safeDate).toLocaleDateString('fr-FR', { 
-    day: '2-digit', month: '2-digit', year: 'numeric', 
-    hour: '2-digit', minute:'2-digit' 
-  })
+  return new Date(safeDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' })
 }
 </script>
 
 <template>
   <div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-      <h2 style="margin: 0; color: #4CAF50;">Retours utilisateurs ({{ feedbacks.length }})</h2>
-      <button @click="emit('refresh')" style="padding: 8px 15px; background: #e0e0e0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">🔄 Rafraîchir</button>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="m-0 font-heading text-2xl text-primary font-bold dark:text-gray-100">Retours utilisateurs ({{ feedbacks.length }})</h2>
+      <button @click="emit('refresh')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-cta font-bold hover:bg-gray-300 transition-colors text-sm dark:bg-gray-700 dark:text-gray-200">🔄 Rafraîchir</button>
     </div>
     
-    <div v-if="isLoading" style="text-align: center; padding: 40px; color: #888;">Chargement des signalements...</div>
-    <div v-else-if="feedbacks.length === 0" style="text-align: center; padding: 40px; color: #888; font-style: italic; background: white; border-radius: 12px;">Aucun signalement pour le moment.</div>
+    <div v-if="isLoading" class="text-center p-10 text-gray-500 dark:text-gray-400">Chargement des signalements...</div>
+    <div v-else-if="feedbacks.length === 0" class="text-center p-10 text-gray-500 italic bg-surface rounded-xl dark:bg-gray-800 dark:text-gray-400">Aucun signalement pour le moment.</div>
     
-    <div v-else style="display: flex; flex-direction: column; gap: 15px;">
-      <div v-for="fb in feedbacks" :key="fb.id" :style="{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderLeft: fb.subject === 'bug' ? '5px solid #f44336' : fb.subject === 'idea' ? '5px solid #2196F3' : '5px solid #9e9e9e', opacity: fb.status === 'accepted' ? 0.6 : 1 }">
+    <div v-else class="flex flex-col gap-4">
+      <div v-for="fb in feedbacks" :key="fb.id" 
+           class="bg-surface rounded-xl p-5 shadow-sm border border-gray-200 transition-opacity border-l-4 dark:bg-gray-800 dark:border-gray-700"
+           :class="[ fb.status === 'accepted' ? 'opacity-60' : 'opacity-100', fb.subject === 'bug' ? 'border-l-red-500' : fb.subject === 'idea' ? 'border-l-blue-500' : 'border-l-gray-400' ]">
         
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start;">
+        <div class="flex justify-between mb-3 items-start">
           <div>
-            <h3 style="margin: 0 0 5px 0; color: #333; display: flex; align-items: center; gap: 10px;">
+            <h3 class="m-0 mb-1 text-text font-heading text-lg font-bold flex items-center gap-2 dark:text-gray-100">
               {{ fb.subject === 'bug' ? '🐛 Bug rapporté' : fb.subject === 'idea' ? '💡 Idée proposée' : '✉️ Autre message' }}
-              <!-- Badge affiché si le signalement est accepté -->
-              <span v-if="fb.status === 'accepted'" style="font-size: 0.75rem; background: #e8f5e9; color: #4CAF50; padding: 4px 8px; border-radius: 12px;">✔ Traité</span>
+              <span v-if="fb.status === 'accepted'" class="text-[0.65rem] uppercase tracking-wide bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400">✔ Traité</span>
             </h3>
-            <div style="font-size: 0.85rem; color: #666;">De <strong>{{ fb.first_name || 'Inconnu' }}</strong> ({{ fb.email }})</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">De <strong class="font-bold text-text dark:text-gray-200">{{ fb.first_name || 'Inconnu' }}</strong> ({{ fb.email }})</div>
           </div>
           
-          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-            <div style="font-size: 0.8rem; color: #aaa; text-align: right;">{{ formatDate(fb.created_at) }}</div>
-            
-            <div style="display: flex; gap: 8px;">
-              <!-- Masqué si déjà accepté -->
-              <button v-if="fb.status !== 'accepted'" @click="emit('accept', fb.id)" style="background: #e8f5e9; border: 1px solid #c8e6c9; color: #4CAF50; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: background 0.2s;">
-                Accepter
-              </button>
-              <button @click="emit('delete', fb.id)" style="background: #ffebee; border: 1px solid #ffcdd2; color: #f44336; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: background 0.2s;">
-                Supprimer
-              </button>
+          <div class="flex flex-col items-end gap-2">
+            <div class="text-xs text-gray-400 text-right font-medium">{{ formatDate(fb.created_at) }}</div>
+            <div class="flex gap-2">
+              <button v-if="fb.status !== 'accepted'" @click="emit('accept', fb.id)" class="bg-green-50 border border-green-200 text-green-600 px-3 py-1.5 rounded-cta cursor-pointer text-xs font-bold uppercase tracking-wide transition-colors hover:bg-green-100 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/50">Accepter</button>
+              <button @click="emit('delete', fb.id)" class="bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-cta cursor-pointer text-xs font-bold uppercase tracking-wide transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/50">Supprimer</button>
             </div>
           </div>
         </div>
         
-        <p style="margin: 0; color: #444; line-height: 1.5; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; white-space: pre-wrap;">{{ fb.message }}</p>
+        <p class="m-0 text-gray-700 text-sm leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100 whitespace-pre-wrap dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300">{{ fb.message }}</p>
       </div>
     </div>
   </div>
