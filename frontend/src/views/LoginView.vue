@@ -33,13 +33,16 @@ const handleLogin = async () => {
     errorMessage.value = 'Erreur réseau. Impossible de joindre le serveur.'
   }
 }
+
+const goToWelcome = () => router.push('/welcome')
+const goToRegister = () => router.push('/register')
 </script>
 
 <template>
   <main class="flex flex-col justify-center items-center min-h-[80vh] p-5 font-body">
     
     <div class="w-full max-w-[400px] mb-4">
-      <button @click="router.push('/welcome')" class="bg-transparent border-none text-accent text-base font-bold cursor-pointer p-0 hover:opacity-80 transition-opacity">
+      <button @click="goToWelcome" class="bg-transparent border-none text-accent text-base font-bold cursor-pointer p-0 hover:opacity-80 transition-opacity">
         ← Retour à la présentation
       </button>
     </div>
@@ -53,7 +56,7 @@ const handleLogin = async () => {
 
       <p class="text-center text-sm text-gray-600 mb-6 dark:text-gray-400">
         Pas encore de compte ? 
-        <router-link to="/register" class="text-accent font-bold no-underline hover:opacity-80">S'inscrire</router-link>
+        <button type="button" @click="goToRegister" class="bg-transparent border-none text-accent font-bold cursor-pointer hover:opacity-80 p-0 text-sm inline">S'inscrire</button>
       </p>
 
       <form @submit.prevent="handleLogin" class="flex flex-col gap-4">

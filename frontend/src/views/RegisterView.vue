@@ -33,13 +33,16 @@ const handleRegister = async () => {
     errorMessage.value = 'Erreur réseau.'
   }
 }
+
+const goToWelcome = () => router.push('/welcome')
+const goToLogin = () => router.push('/login')
 </script>
 
 <template>
   <main class="flex flex-col justify-center items-center min-h-[80vh] p-5 font-body">
     
     <div class="w-full max-w-[400px] mb-4">
-      <button @click="router.push('/welcome')" class="bg-transparent border-none text-accent text-base font-bold cursor-pointer p-0 hover:opacity-80 transition-opacity">
+      <button @click="goToWelcome" class="bg-transparent border-none text-accent text-base font-bold cursor-pointer p-0 hover:opacity-80 transition-opacity">
         ← Retour à la présentation
       </button>
     </div>
@@ -73,7 +76,7 @@ const handleRegister = async () => {
 
         <p class="text-center text-sm text-gray-600 mt-4 mb-0 dark:text-gray-400">
           Déjà un compte ? 
-          <router-link to="/login" class="text-accent font-bold no-underline hover:opacity-80">Se connecter</router-link>
+          <button type="button" @click="goToLogin" class="bg-transparent border-none text-accent font-bold cursor-pointer hover:opacity-80 p-0 text-sm inline">Se connecter</button>
         </p>
       </form>
     </div>
